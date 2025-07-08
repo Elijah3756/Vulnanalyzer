@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for containerized vulnerability analyzer
+# Dockerfile for containerized vulnerability analyzer
 FROM python:3.11-slim as base
 
 # Set environment variables for container
@@ -28,31 +28,18 @@ RUN groupadd --gid 1000 appuser && \
 WORKDIR /app
 
 # ==================================
-# Development stage
+# Main stage
 # ==================================
-FROM base as development
+FROM base
 
-# Copy all source code for development
-COPY --chown=appuser:appuser . .
-
-# Install development dependencies
-
-RUN uv pip install --system -e ".[dev]"
-USER appuser
-
-# ==================================
-# Production stage
-# ==================================
-FROM base as production
-
-# Copy only necessary files for production
+# Copy necessary files
 COPY pyproject.toml README.md ./
 COPY vuln_analyzer/ ./vuln_analyzer/
 COPY scripts/ ./scripts/
 COPY examples/ ./examples/
 COPY docs/ ./docs/
 
-# Install production dependencies
+# Install dependencies
 RUN uv pip install --system .
 
 # Create directories for data and configuration

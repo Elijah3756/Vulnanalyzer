@@ -4,41 +4,30 @@ help:
 	@echo "Vulnerability Analyzer - Containerized Commands"
 	@echo ""
 	@echo "Docker Operations:"
-	@echo "  docker-build         - Build Docker image (production)"
-	@echo "  docker-build-dev     - Build Docker image (development)"
+	@echo "  docker-build         - Build Docker image"
 	@echo "  docker-run           - Run container with help"
 	@echo "  docker-shell         - Start interactive shell in container"
-	@echo "  docker-init          - Initialize container environment"
 	@echo "  docker-clean         - Clean Docker images and containers"
 	@echo ""
-	@echo "Container Management:"
-	@echo "  container-up         - Start all services"
-	@echo "  container-down       - Stop all services"
-	@echo "  container-logs       - Show container logs"
-	@echo "  container-setup      - Complete setup (download + build database)"
-	@echo "  container-reset      - Reset all data and rebuild"
-	@echo ""
-	@echo "Database Operations (Containerized):"
-	@echo "  db-create            - Create database from CVE files"
-	@echo "  db-stats             - Show database statistics"
-	@echo "  db-query             - Interactive database queries"
-	@echo "  db-rebuild           - Clear and rebuild database"
-	@echo ""
-	@echo "📥 CVE Data Management (Containerized):"
+	@echo "Setup Commands:"
+	@echo "  setup                - Complete setup (download + build database)"
+	@echo "  download-kev         - Download CISA Known Exploited Vulnerabilities"
 	@echo "  download-recent      - Download recent CVEs (30 days)"
 	@echo "  download-year        - Download CVEs for 2024"
 	@echo "  download-all         - Download ALL CVEs (with retry protection)"
-	@echo "  download-kev         - Download CISA Known Exploited Vulnerabilities"
+	@echo "  create-database      - Create database from CVE files"
 	@echo ""
-	@echo "Analysis Examples (Containerized):"
+	@echo "Analysis Examples:"
 	@echo "  analyze-cve          - Analyze CVE-2021-44228 (Log4Shell)"
 	@echo "  analyze-purl         - Analyze npm package (lodash)"
 	@echo "  analyze-wildcard     - Analyze Python ecosystem"
 	@echo "  analyze-comprehensive - Comprehensive Apache analysis"
 	@echo ""
+	@echo "Database Operations:"
+	@echo "  db-stats             - Show database statistics"
+	@echo "  db-query             - Interactive database queries"
+	@echo ""
 	@echo "Development:"
-	@echo "  dev-up               - Start development environment"
-	@echo "  dev-shell            - Development shell with code mount"
 	@echo "  install-local        - Install locally with uv (non-Docker)"
 	@echo "  test-local           - Run tests locally"
 	@echo "  lint-local           - Run linting locally"
@@ -48,108 +37,77 @@ help:
 	@echo "  demo                 - Run demo analysis"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make container-setup     # Download data and build database"
+	@echo "  make setup               # Download data and build database"
 	@echo "  make analyze-cve         # Analyze Log4Shell vulnerability"
 	@echo "  make download-recent     # Get latest 30 days of CVEs"
-	@echo "  make dev-up              # Start development environment"
 
 # ================================================
 # Docker Operations
 # ================================================
 
 docker-build:
-	@echo "Building production Docker image..."
-	docker build -t vuln-analyzer:latest --target production .
-
-docker-build-dev:
-	@echo "Building development Docker image..."
-	docker build -t vuln-analyzer:dev --target development .
+	@echo "Building Docker image..."
+	docker build -t vuln-analyzer:latest .
 
 docker-run:
 	@echo "Running vulnerability analyzer container..."
-	docker run --rm vuln-analyzer:latest
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest
 
 docker-shell:
 	@echo "Starting interactive shell..."
-	docker run --rm -it vuln-analyzer:latest shell
-
-docker-init:
-	@echo "Initializing container environment..."
-	docker run --rm vuln-analyzer:latest init
+	docker run --rm -it -v vuln_data:/app/data vuln-analyzer:latest shell
 
 docker-clean:
 	@echo "Cleaning Docker resources..."
 	docker image prune -f
 	docker container prune -f
-	-docker rmi vuln-analyzer:latest vuln-analyzer:dev
+	-docker rmi vuln-analyzer:latest
 
 # ================================================
-# Container Management with Docker Compose
+# Setup and Data Management
 # ================================================
 
-container-up:
-	@echo "Starting all services..."
-	docker-compose up -d vuln-analyzer
-
-container-down:
-	@echo "Stopping all services..."
-	docker-compose down
-
-container-logs:
-	@echo "Showing container logs..."
-	docker-compose logs -f
-
-container-setup: download-kev download-recent db-create
-	@echo "Complete container setup finished!"
-
-container-reset:
-	@echo "Resetting all data..."
-	docker-compose down -v
-	docker volume prune -f
-	$(MAKE) container-setup
-
-# ================================================
-# Database Operations (Containerized)
-# ================================================
-
-db-create:
-	@echo "Creating vulnerability database..."
-	docker-compose --profile setup run --rm database-builder
-
-db-stats:
-	@echo "Showing database statistics..."
-	docker-compose --profile query run --rm query-service stats
-
-db-query:
-	@echo "Starting interactive database queries..."
-	docker-compose --profile query run --rm query-service --help
-
-db-rebuild:
-	@echo "Rebuilding database..."
-	docker-compose --profile setup run --rm database-builder --clear
-
-# ================================================
-# CVE Data Management (Containerized)
-# ================================================
-
-download-recent:
-	@echo "Downloading recent CVEs (30 days)..."
-	docker-compose --profile download run --rm cve-downloader
-
-download-year:
-	@echo "Downloading CVEs for 2024..."
-	docker-compose --profile download run --rm cve-downloader --year 2024
-
-download-all:
-	@echo "Downloading ALL CVEs (this will take a while)..."
-	docker-compose --profile download run --rm cve-downloader --all --max-retries 10 --retry-delay 180
+setup: download-kev download-recent create-database
+	@echo "Complete setup finished!"
 
 download-kev:
 	@echo "Downloading CISA Known Exploited Vulnerabilities..."
 	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest download-kev
 
+download-recent:
+	@echo "Downloading recent CVEs (30 days)..."
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest download-cves --recent-days 30
+
+download-year:
+	@echo "Downloading CVEs for 2024..."
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest download-cves --year 2024
+
+download-all:
+	@echo "Downloading ALL CVEs (this will take a while)..."
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest download-cves --all --max-retries 10 --retry-delay 180
+
+create-database:
+	@echo "Creating vulnerability database..."
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest create-database
+
 # ================================================
-# Analysis Examples (Containerized)
+# Database Operations
+# ================================================
+
+db-stats:
+	@echo "Showing database statistics..."
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest query-database stats
+
+db-query:
+	@echo "Starting interactive database queries..."
+	docker run --rm -it -v vuln_data:/app/data vuln-analyzer:latest query-database --help
+
+db-rebuild:
+	@echo "Rebuilding database..."
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest create-database --clear
+
+# ================================================
+# Analysis Examples
 # ================================================
 
 analyze-cve:
@@ -171,14 +129,6 @@ analyze-comprehensive:
 # ================================================
 # Development
 # ================================================
-
-dev-up:
-	@echo "Starting development environment..."
-	docker-compose --profile dev up -d vuln-analyzer-dev
-
-dev-shell:
-	@echo "Starting development shell..."
-	docker-compose --profile dev run --rm vuln-analyzer-dev shell
 
 install-local:
 	@echo "Installing locally with uv..."
@@ -211,7 +161,7 @@ clean-local:
 # Quick Start & Demo
 # ================================================
 
-quick-start: docker-build container-setup
+quick-start: docker-build setup
 	@echo ""
 	@echo "Quick start completed!"
 	@echo ""
@@ -229,7 +179,16 @@ demo: analyze-cve
 	@echo "  make analyze-comprehensive"
 
 # ================================================
-# Legacy Compatibility (Docker-based)
+# Utility Commands
+# ================================================
+
+reset:
+	@echo "Resetting all data..."
+	docker volume rm vuln_data || true
+	$(MAKE) setup
+
+# ================================================
+# Legacy Compatibility
 # ================================================
 
 build: docker-build

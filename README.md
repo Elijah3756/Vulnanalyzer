@@ -1,8 +1,8 @@
 # Vulnerability Analyzer
 
-A **fully containerized** CLI tool for analyzing vulnerability data using CVE, PURL, CPE identifiers, or performing comprehensive wildcard searches. This tool provides vulnerability introduction rates and historical usage rates by analyzing the extensive CVE database.
+A **containerized** CLI tool for analyzing vulnerability data using CVE, PURL, CPE identifiers, or performing comprehensive wildcard searches. This tool provides vulnerability introduction rates and historical usage rates by analyzing the extensive CVE database.
 
-## Quick Start (Containerized)
+## Quick Start
 
 Get started in 3 simple steps:
 
@@ -11,7 +11,7 @@ Get started in 3 simple steps:
 make docker-build
 
 # 2. Set up data and database  
-make container-setup
+make setup
 
 # 3. Analyze vulnerabilities
 make analyze-cve          # Analyze Log4Shell
@@ -20,20 +20,19 @@ make analyze-wildcard     # Search Python ecosystem
 
 ## Features
 
-- **Fully Containerized**: Run from any machine with Docker - no local dependencies needed
+- **Containerized**: Run from any machine with Docker - no local dependencies needed
 - **Multi-format Support**: Analyze CVE IDs, Package URLs (PURL), or Common Platform Enumeration (CPE)
 - **Wildcard Search**: Comprehensive analysis of any technology, language, or product (e.g., "python", "apache *", "nodejs")
 - **Component Analysis**: Break down PURL and CPE components for detailed risk assessment
 - **Lightning Fast**: SQLite database for 200-500x faster queries than file-based analysis
 - **Enhanced Risk Metrics**: Calculate vulnerability activity rates, exploitation risks, and threat levels
 - **Smart Recommendations**: Actionable insights based on component analysis
-- **Container Orchestration**: Complete Docker Compose setup with multiple services
+- **Single Container**: Simple Docker setup with all functionality in one image
 
 ## Container Installation & Setup
 
 ### Prerequisites
 - Docker (20.10+)
-- Docker Compose (2.0+)
 
 ### Build & Initialize
 
@@ -42,12 +41,12 @@ make analyze-wildcard     # Search Python ecosystem
 make docker-build
 
 # Complete setup (downloads KEV data, recent CVEs, builds database)
-make container-setup
+make setup
 
 # Or do individual steps:
 make download-kev        # Download CISA Known Exploited Vulnerabilities
 make download-recent     # Download recent CVEs (30 days)
-make db-create          # Build SQLite database
+make create-database     # Build SQLite database
 ```
 
 ### Verify Installation
@@ -84,15 +83,15 @@ docker run --rm -v vuln_data:/app/data vuln-analyzer:latest python --output-form
 
 ```bash
 # Database management
-make db-create          # Build database from CVE files
+make create-database    # Build database from CVE files
 make db-stats           # Show statistics
 make db-rebuild         # Clear and rebuild
 make db-query           # Interactive queries
 
 # Direct database queries
-docker-compose --profile query run --rm query-service stats
-docker-compose --profile query run --rm query-service vendor "Microsoft" --limit 20
-docker-compose --profile query run --rm query-service search "buffer overflow"
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest query-database stats
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest query-database vendor "Microsoft" --limit 20
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest query-database search "buffer overflow"
 ```
 
 ### Data Management
@@ -111,17 +110,16 @@ make download-recent
 
 ## Development Environment
 
-### Start Development Container
+### Development Setup
 
 ```bash
-# Start development environment with live code mounting
-make dev-up
-
 # Interactive development shell
-make dev-shell
+make docker-shell
 
-# View development logs
-make container-logs
+# Build and test locally
+make install-local
+make test-local
+make lint-local
 ```
 
 ### Local Development (Non-Containerized)
@@ -139,18 +137,14 @@ make format-local
 
 ## Container Architecture
 
-### Services Overview
+### Single Container Design
 
-```yaml
-# Production services
-vuln-analyzer       # Main analysis service
-database-builder    # Database creation service  
-cve-downloader     # CVE data download service
-query-service      # Database query service
+The vulnerability analyzer runs as a single Docker container that can perform multiple functions:
 
-# Development services  
-vuln-analyzer-dev  # Development environment with code mounting
-```
+- **Main Analysis**: CVE, PURL, CPE vulnerability analysis
+- **Data Download**: CVE data from NVD API and CISA KEV catalog
+- **Database Management**: SQLite database creation and queries
+- **Interactive Shell**: Development and debugging capabilities
 
 ### Volume Structure
 
@@ -160,9 +154,6 @@ vuln-analyzer-dev  # Development environment with code mounting
 ├── databases/                # SQLite databases
 ├── downloads/                # Downloaded data
 └── known_exploited_vulnerabilities.json
-
-/app/config/                  # Configuration files
-/app/logs/                    # Application logs
 ```
 
 ### Environment Variables
@@ -225,17 +216,17 @@ RESTART_POLICY=unless-stopped # Container restart policy
 
 ## Production Deployment
 
-### Docker Compose Production
+### Single Container Deployment
 
 ```bash
-# Production deployment
-docker-compose up -d vuln-analyzer
+# Build for production
+make docker-build
 
-# With multiple profiles
-docker-compose --profile download --profile setup up -d
+# Complete setup
+make setup
 
-# Scale specific services
-docker-compose up -d --scale cve-downloader=2
+# Run specific analysis
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest CVE-2021-44228
 ```
 
 ### Health Monitoring
@@ -286,15 +277,15 @@ docker run --rm -v vuln_data:/app/data vuln-analyzer:latest \
 
 ```bash
 # Database operations
-docker-compose --profile setup run --rm database-builder --clear
-docker-compose --profile query run --rm query-service stats
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest create-database --clear
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest query-database stats
 
 # Data downloads with API key
-docker-compose --profile download run --rm \
-  -e NVD_API_KEY=your_key_here cve-downloader --recent-days 7
+docker run --rm -v vuln_data:/app/data \
+  -e NVD_API_KEY=your_key_here vuln-analyzer:latest download-cves --recent-days 7
 
 # Interactive database queries
-docker-compose --profile query run --rm query-service vendor "Apache" --limit 10
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest query-database vendor "Apache" --limit 10
 ```
 
 ## 🔄 Container Management
@@ -303,28 +294,25 @@ docker-compose --profile query run --rm query-service vendor "Apache" --limit 10
 
 ```bash
 # Full system reset
-make container-reset
+make reset
 
 # Update and rebuild
 make docker-clean
 make docker-build
-make container-setup
+make setup
 
-# View all services
-docker-compose ps
+# View running containers
+docker ps
 
-# Scale services
-docker-compose up -d --scale cve-downloader=3
-
-# Stop everything
-make container-down
+# Stop any running containers
+docker stop $(docker ps -q --filter ancestor=vuln-analyzer:latest)
 ```
 
 ### Troubleshooting
 
 ```bash
-# Check container logs
-docker-compose logs vuln-analyzer
+# Check container logs (if running detached)
+docker logs <container_id>
 
 # Interactive debugging
 make docker-shell
@@ -368,12 +356,12 @@ make db-query
 
 ```bash
 # Build and test in CI/CD
-docker build -t vuln-analyzer:ci --target production .
+docker build -t vuln-analyzer:ci .
 docker run --rm vuln-analyzer:ci health
 
 # Deploy to production
 docker tag vuln-analyzer:ci vuln-analyzer:latest
-docker-compose up -d
+# Container is now ready for deployment
 ```
 
 ## Migration from Local Installation
@@ -401,8 +389,8 @@ make clean-local
 
 ### Common Issues
 
-1. **Container won't start**: Check Docker version, ensure ports aren't in use
-2. **Data not persisting**: Verify volume mounts in docker-compose.yml
+1. **Container won't start**: Check Docker version and available disk space
+2. **Data not persisting**: Verify volume mounts are working (`docker volume inspect vuln_data`)
 3. **Slow downloads**: Get an NVD API key, increase retry settings
 4. **Database errors**: Rebuild database with `make db-rebuild`
 
@@ -416,21 +404,21 @@ docker run --rm vuln-analyzer:latest --help
 make help
 
 # Check container status
-docker-compose ps
-docker-compose logs
+docker ps
+docker logs <container_id>
 ```
 
 ### Performance Optimization
 
 ```bash
-# Increase container resources
-docker-compose up -d --memory=4g --cpus=2
+# Run container with increased resources
+docker run --rm -v vuln_data:/app/data --memory=4g --cpus=2 vuln-analyzer:latest
 
 # Optimize database
 make db-rebuild
 
 # Use API key for downloads
-echo "NVD_API_KEY=your_key" >> .env
+docker run --rm -v vuln_data:/app/data -e NVD_API_KEY=your_key vuln-analyzer:latest download-cves --recent-days 30
 ```
 
 ## License
@@ -442,10 +430,11 @@ This project is licensed under the MIT License. See the LICENSE file for details
 Contributions are welcome! The containerized setup makes development easy:
 
 ```bash
-# Start development environment
-make dev-up
+# Start development shell
+make docker-shell
 
-# Make changes, test
+# Make changes, test locally
+make install-local
 make test-local
 
 # Submit PR
