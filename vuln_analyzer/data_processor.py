@@ -27,13 +27,13 @@ class VulnerabilityProcessor:
         self.verbose = verbose
         self.logger = self._setup_logger()
         
-        # KEV file path - use environment variable or default
+        # Setup KEV file path
         if kev_file_path is None:
             env_kev_path = os.getenv('KEV_FILE_PATH')
             if env_kev_path:
                 self.kev_file_path = Path(env_kev_path)
             else:
-            self.kev_file_path = Path("known_exploited_vulnerabilities.json")
+                self.kev_file_path = Path('known_exploited_vulnerabilities.json')
         else:
             self.kev_file_path = kev_file_path
         

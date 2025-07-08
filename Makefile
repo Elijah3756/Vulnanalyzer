@@ -134,7 +134,7 @@ db-rebuild:
 
 download-recent:
 	@echo "Downloading recent CVEs (30 days)..."
-	docker-compose --profile download run --rm cve-downloader --recent-days 30
+	docker-compose --profile download run --rm cve-downloader
 
 download-year:
 	@echo "Downloading CVEs for 2024..."
