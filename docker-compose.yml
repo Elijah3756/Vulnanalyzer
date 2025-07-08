@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  vuln-analyzer:
+    build: .
+    container_name: vuln-analyzer
+    volumes:
+      - ./cvelistV5:/app/cvelistV5:ro
+    environment:
+      - CVE_DATA_PATH=/app/cvelistV5/cves
+    command: ["--help"]
+    
+  # Optional: Development service with local code mounting
+  vuln-analyzer-dev:
+    build: .
+    container_name: vuln-analyzer-dev
+    volumes:
+      - ./cvelistV5:/app/cvelistV5:ro
+      - ./vuln_analyzer:/app/vuln_analyzer:ro
+    environment:
+      - CVE_DATA_PATH=/app/cvelistV5/cves
+      - PYTHONPATH=/app
+    profiles:
+      - dev
+    command: ["--help"] 
