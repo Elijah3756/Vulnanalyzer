@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Example usage of the vulnerability analyzer."""
 
+import os
 from pathlib import Path
 from vuln_analyzer.data_processor import VulnerabilityProcessor
 
@@ -8,9 +9,9 @@ from vuln_analyzer.data_processor import VulnerabilityProcessor
 def main():
     """Demonstrate how to use the vulnerability analyzer programmatically."""
     
-    # Initialize the processor
-    cve_data_path = Path("./cvelistV5/cves")
-    kev_file_path = Path("./known_exploited_vulnerabilities.json")
+    # Initialize the processor with environment-aware paths
+    cve_data_path = Path(os.getenv('CVE_DATA_PATH', "./cvelistV5/cves"))
+    kev_file_path = Path(os.getenv('KEV_FILE_PATH', "./known_exploited_vulnerabilities.json"))
     processor = VulnerabilityProcessor(cve_data_path, verbose=True, kev_file_path=kev_file_path)
     
     # Example 1: Analyze a CVE ID

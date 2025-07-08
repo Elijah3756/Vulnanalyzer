@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 import argparse
+import os
 
 from tqdm import tqdm
 
@@ -568,19 +569,19 @@ def main():
     parser.add_argument(
         "--cve-dir",
         type=Path,
-        default="./cvelistV5/cves",
-        help="CVE data directory"
+        default=os.getenv('CVE_DATA_PATH', "./cvelistV5/cves"),
+        help=f"CVE data directory (default: $CVE_DATA_PATH or ./cvelistV5/cves)"
     )
     parser.add_argument(
         "--kev-file",
         type=Path,
-        default="./known_exploited_vulnerabilities.json",
-        help="Known exploited vulnerabilities JSON file"
+        default=os.getenv('KEV_FILE_PATH', "./known_exploited_vulnerabilities.json"),
+        help=f"Known exploited vulnerabilities JSON file (default: $KEV_FILE_PATH or ./known_exploited_vulnerabilities.json)"
     )
     parser.add_argument(
         "--db-path",
-        default="cve_database.db",
-        help="Output database path"
+        default=os.getenv('DATABASE_PATH', "cve_database.db"),
+        help=f"Output database path (default: $DATABASE_PATH or cve_database.db)"
     )
     parser.add_argument(
         "--clear",

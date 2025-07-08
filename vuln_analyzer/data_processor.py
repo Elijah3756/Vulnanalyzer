@@ -1,6 +1,7 @@
 """Data processor for vulnerability analysis."""
 
 import json
+import os
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -16,14 +17,22 @@ from .models import AnalysisResult, CVERecord, MetricsData, ComponentAnalysisRes
 class VulnerabilityProcessor:
     """Main processor for vulnerability analysis."""
     
-    def __init__(self, cve_data_path: Path, verbose: bool = False, kev_file_path: Optional[Path] = None):
+    def __init__(self, cve_data_path: Optional[Path] = None, verbose: bool = False, kev_file_path: Optional[Path] = None):
         """Initialize the processor with CVE data path."""
+        # Use environment variables for default paths
+        if cve_data_path is None:
+            cve_data_path = Path(os.getenv('CVE_DATA_PATH', './cvelistV5/cves'))
+        
         self.cve_data_path = cve_data_path
         self.verbose = verbose
         self.logger = self._setup_logger()
         
-        # KEV file path - default to known_exploited_vulnerabilities.json in project root
+        # KEV file path - use environment variable or default
         if kev_file_path is None:
+            env_kev_path = os.getenv('KEV_FILE_PATH')
+            if env_kev_path:
+                self.kev_file_path = Path(env_kev_path)
+            else:
             self.kev_file_path = Path("known_exploited_vulnerabilities.json")
         else:
             self.kev_file_path = kev_file_path

@@ -39,11 +39,25 @@ class NVDDownloader:
         self.rate_limit = 50 if api_key else 5
         self.rate_window = 30  # seconds
         
+        # Retry configuration
+        self.max_retries = 3
+        self.retry_delay_base = 60 if api_key else 120  # Base delay in seconds
+        self.max_retry_delay = 600  # Maximum delay in seconds
+        
         # Setup logging
         self.logger = self._setup_logger()
         
         # Track requests for rate limiting
         self.request_times = []
+        
+        # Track download statistics
+        self.download_stats = {
+            'total_requests': 0,
+            'successful_requests': 0,
+            'failed_requests': 0,
+            'rate_limit_hits': 0,
+            'retries': 0
+        }
     
     def _setup_logger(self) -> logging.Logger:
         """Set up logging configuration."""
@@ -81,27 +95,96 @@ class NVDDownloader:
         # Record this request
         self.request_times.append(current_time)
     
-    def _make_request(self, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Make a request to the NVD API with rate limiting."""
+    def _make_request(self, params: Dict[str, Any], max_retries: int = None) -> Optional[Dict[str, Any]]:
+        """Make a request to the NVD API with rate limiting and retry logic."""
+        if max_retries is None:
+            max_retries = self.max_retries
+            
         self._rate_limit_check()
+        self.download_stats['total_requests'] += 1
         
         headers = {}
         if self.api_key:
             headers["apiKey"] = self.api_key
         
-        try:
-            response = requests.get(
-                self.base_url,
-                params=params,
-                headers=headers,
-                timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        for attempt in range(max_retries + 1):
+            try:
+                response = requests.get(
+                    self.base_url,
+                    params=params,
+                    headers=headers,
+                    timeout=30
+                )
+                
+                # Handle 429 Too Many Requests
+                if response.status_code == 429:
+                    self.download_stats['rate_limit_hits'] += 1
+                    if attempt < max_retries:
+                        self.download_stats['retries'] += 1
+                        # Exponential backoff: 2^attempt * base_delay
+                        delay = min(self.retry_delay_base * (2 ** attempt), self.max_retry_delay)
+                        
+                        self.logger.warning(f"Rate limit exceeded (429). Retrying in {delay} seconds... (attempt {attempt + 1}/{max_retries + 1})")
+                        time.sleep(delay)
+                        
+                        # Reset rate limit tracking after a 429
+                        self.request_times = []
+                        continue
+                    else:
+                        self.download_stats['failed_requests'] += 1
+                        self.logger.error("Max retries exceeded for rate limit. Consider using an API key or waiting longer.")
+                        return None
+                
+                # Handle other HTTP errors
+                if response.status_code >= 400:
+                    self.logger.error(f"HTTP {response.status_code}: {response.text}")
+                    if response.status_code == 403:
+                        self.logger.error("403 Forbidden - Check your API key if using one")
+                    elif response.status_code == 500:
+                        if attempt < max_retries:
+                            self.download_stats['retries'] += 1
+                            delay = 30 * (2 ** attempt)  # Exponential backoff for server errors
+                            self.logger.warning(f"Server error (500). Retrying in {delay} seconds...")
+                            time.sleep(delay)
+                            continue
+                    self.download_stats['failed_requests'] += 1
+                    return None
+                
+                response.raise_for_status()
+                self.download_stats['successful_requests'] += 1
+                return response.json()
+            
+            except requests.exceptions.Timeout:
+                if attempt < max_retries:
+                    self.download_stats['retries'] += 1
+                    delay = 30 * (2 ** attempt)
+                    self.logger.warning(f"Request timeout. Retrying in {delay} seconds... (attempt {attempt + 1}/{max_retries + 1})")
+                    time.sleep(delay)
+                    continue
+                else:
+                    self.logger.error("Request timeout after all retries")
+                    self.download_stats['failed_requests'] += 1
+                    return None
+            
+            except requests.exceptions.ConnectionError:
+                if attempt < max_retries:
+                    self.download_stats['retries'] += 1
+                    delay = 60 * (2 ** attempt)
+                    self.logger.warning(f"Connection error. Retrying in {delay} seconds... (attempt {attempt + 1}/{max_retries + 1})")
+                    time.sleep(delay)
+                    continue
+                else:
+                    self.logger.error("Connection error after all retries")
+                    self.download_stats['failed_requests'] += 1
+                    return None
+            
+            except requests.exceptions.RequestException as e:
+                self.logger.error(f"API request failed: {e}")
+                self.download_stats['failed_requests'] += 1
+                return None
         
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"API request failed: {e}")
-            return None
+        self.download_stats['failed_requests'] += 1
+        return None
     
     def download_cves_by_date_range(
         self,
@@ -335,9 +418,30 @@ class NVDDownloader:
             }
         }
     
+    def get_download_stats(self) -> Dict[str, Any]:
+        """Get download statistics."""
+        stats = self.download_stats.copy()
+        if stats['total_requests'] > 0:
+            stats['success_rate'] = stats['successful_requests'] / stats['total_requests']
+            stats['failure_rate'] = stats['failed_requests'] / stats['total_requests']
+        else:
+            stats['success_rate'] = 0.0
+            stats['failure_rate'] = 0.0
+        return stats
+    
+    def reset_download_stats(self) -> None:
+        """Reset download statistics."""
+        self.download_stats = {
+            'total_requests': 0,
+            'successful_requests': 0,
+            'failed_requests': 0,
+            'rate_limit_hits': 0,
+            'retries': 0
+        }
+    
     def download_all_cves(self, results_per_page: int = 2000) -> List[Dict[str, Any]]:
         """
-        Download ALL CVEs from the NVD database.
+        Download ALL CVEs from the NVD database with enhanced error handling.
         
         Args:
             results_per_page: Number of results per API call (max 2000)
@@ -347,8 +451,11 @@ class NVDDownloader:
         """
         all_cves = []
         start_index = 0
+        consecutive_failures = 0
+        max_consecutive_failures = 5
         
         self.logger.info("Downloading ALL CVEs from NVD database...")
+        self.reset_download_stats()
         
         while True:
             params = {
@@ -360,8 +467,21 @@ class NVDDownloader:
             
             response_data = self._make_request(params)
             if not response_data:
-                self.logger.error("Failed to get response from NVD API")
-                break
+                consecutive_failures += 1
+                self.logger.error(f"Failed to get response from NVD API (failure {consecutive_failures}/{max_consecutive_failures})")
+                
+                if consecutive_failures >= max_consecutive_failures:
+                    self.logger.error(f"Too many consecutive failures ({consecutive_failures}). Stopping download.")
+                    break
+                
+                # Wait longer between retries for consecutive failures
+                wait_time = min(300 * consecutive_failures, 1800)  # 5-30 minutes
+                self.logger.info(f"Waiting {wait_time} seconds before retrying...")
+                time.sleep(wait_time)
+                continue
+            
+            # Reset consecutive failures on success
+            consecutive_failures = 0
             
             vulnerabilities = response_data.get("vulnerabilities", [])
             if not vulnerabilities:
@@ -374,12 +494,25 @@ class NVDDownloader:
             total_results = response_data.get("totalResults", 0)
             self.logger.info(f"Progress: {len(all_cves)} / {total_results} CVEs downloaded")
             
+            # Log statistics periodically
+            if len(all_cves) % 10000 == 0:
+                stats = self.get_download_stats()
+                self.logger.info(f"Download stats: {stats['successful_requests']} successful, "
+                               f"{stats['failed_requests']} failed, {stats['rate_limit_hits']} rate limits, "
+                               f"{stats['retries']} retries")
+            
             if start_index + results_per_page >= total_results:
                 break
             
             start_index += results_per_page
         
-        self.logger.info(f"Downloaded {len(all_cves)} total CVEs")
+        # Final statistics
+        stats = self.get_download_stats()
+        self.logger.info(f"Download completed: {len(all_cves)} total CVEs")
+        self.logger.info(f"Final stats: {stats['successful_requests']} successful requests, "
+                        f"{stats['failed_requests']} failed requests, {stats['rate_limit_hits']} rate limit hits, "
+                        f"{stats['retries']} retries, {stats['success_rate']:.1%} success rate")
+        
         return all_cves
     
     def download_and_save_all(self) -> None:
@@ -414,8 +547,8 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default="downloaded_cves",
-        help="Output directory for CVE data"
+        default=os.getenv('DOWNLOAD_DIR', "downloaded_cves"),
+        help=f"Output directory for CVE data (default: $DOWNLOAD_DIR or downloaded_cves)"
     )
     parser.add_argument(
         "--year",
@@ -441,14 +574,58 @@ def main():
         action="store_true",
         help="Download ALL CVEs from the NVD database"
     )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=3,
+        help="Maximum number of retries for failed requests (default: 3)"
+    )
+    parser.add_argument(
+        "--retry-delay",
+        type=int,
+        default=60,
+        help="Base delay in seconds for retries (default: 60, longer without API key)"
+    )
+    parser.add_argument(
+        "--max-retry-delay",
+        type=int,
+        default=600,
+        help="Maximum delay in seconds for retries (default: 600)"
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose logging"
+    )
     
     args = parser.parse_args()
     
-    # Initialize downloader
+    # Initialize downloader with custom retry settings
     downloader = NVDDownloader(
         api_key=args.api_key,
         output_dir=args.output_dir
     )
+    
+    # Override retry settings if provided
+    if args.max_retries is not None:
+        downloader.max_retries = args.max_retries
+    if args.retry_delay is not None:
+        downloader.retry_delay_base = args.retry_delay if args.api_key else args.retry_delay * 2
+    if args.max_retry_delay is not None:
+        downloader.max_retry_delay = args.max_retry_delay
+    
+    # Set verbose logging if requested
+    if args.verbose:
+        downloader.logger.setLevel(logging.INFO)
+    
+    print(f"Starting CVE download with settings:")
+    print(f"  API Key: {'Yes' if args.api_key else 'No'}")
+    print(f"  Max Retries: {downloader.max_retries}")
+    print(f"  Base Retry Delay: {downloader.retry_delay_base}s")
+    print(f"  Max Retry Delay: {downloader.max_retry_delay}s")
+    print(f"  Rate Limit: {downloader.rate_limit} requests per {downloader.rate_window}s")
+    print()
     
     if args.year:
         print(f"Downloading CVEs for year {args.year}")
@@ -463,6 +640,17 @@ def main():
     else:
         print(f"Downloading CVEs from the last {args.recent_days} days")
         downloader.download_and_save_recent(args.recent_days)
+    
+    # Print final statistics
+    stats = downloader.get_download_stats()
+    print(f"\nDownload completed!")
+    print(f"Statistics:")
+    print(f"  Total Requests: {stats['total_requests']}")
+    print(f"  Successful: {stats['successful_requests']}")
+    print(f"  Failed: {stats['failed_requests']}")
+    print(f"  Rate Limit Hits: {stats['rate_limit_hits']}")
+    print(f"  Retries: {stats['retries']}")
+    print(f"  Success Rate: {stats['success_rate']:.1%}")
 
 
 if __name__ == "__main__":

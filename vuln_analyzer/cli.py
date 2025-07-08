@@ -1,6 +1,7 @@
 """CLI interface for vulnerability analysis."""
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -9,6 +10,21 @@ import click
 
 from .data_processor import VulnerabilityProcessor
 from .models import AnalysisResult
+
+
+def get_default_cve_path() -> str:
+    """Get default CVE data path from environment or fallback."""
+    return os.getenv('CVE_DATA_PATH', './cvelistV5/cves')
+
+
+def get_default_database_path() -> Optional[str]:
+    """Get default database path from environment."""
+    return os.getenv('DATABASE_PATH')
+
+
+def get_default_kev_path() -> Optional[str]:
+    """Get default KEV file path from environment."""
+    return os.getenv('KEV_FILE_PATH')
 
 
 @click.command()
@@ -21,8 +37,8 @@ from .models import AnalysisResult
 @click.option(
     "--cve-data-path",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
-    default="./cvelistV5/cves",
-    help="Path to CVE data directory",
+    default=lambda: get_default_cve_path(),
+    help="Path to CVE data directory (default: $CVE_DATA_PATH or ./cvelistV5/cves)",
 )
 @click.option(
     "--output-format",
@@ -39,13 +55,14 @@ from .models import AnalysisResult
 @click.option(
     "--use-database",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    help="Use SQLite database for faster queries (optional)",
+    default=lambda: get_default_database_path(),
+    help="Use SQLite database for faster queries (default: $DATABASE_PATH)",
 )
 @click.option(
     "--kev-file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    default=None,
-    help="Path to known exploited vulnerabilities JSON file (optional)",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    default=lambda: get_default_kev_path(),
+    help="Path to known exploited vulnerabilities JSON file (default: $KEV_FILE_PATH)",
 )
 @click.option(
     "--comprehensive",

@@ -6,6 +6,7 @@ Provides various query options for the vulnerability database.
 
 import argparse
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Dict, List, Any
@@ -196,8 +197,8 @@ def main():
     parser = argparse.ArgumentParser(description="Query CVE database")
     parser.add_argument(
         "--db-path",
-        default="cve_database.db",
-        help="Path to CVE database"
+        default=os.getenv('DATABASE_PATH', "cve_database.db"),
+        help=f"Path to CVE database (default: $DATABASE_PATH or cve_database.db)"
     )
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')

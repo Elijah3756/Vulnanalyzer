@@ -197,6 +197,58 @@ The script includes robust error handling:
 - **Invalid data**: Skips malformed CVE records with logging
 - **File errors**: Continues processing even if individual files fail
 
+### Error Handling and Retry Logic
+
+The download script includes robust error handling for common API issues:
+
+#### 429 Too Many Requests
+- **Automatic Detection**: Detects 429 errors and waits before retrying
+- **Exponential Backoff**: Increases wait time with each retry (60s → 120s → 240s → 480s)
+- **Rate Limit Reset**: Resets internal rate limiting after 429 errors
+- **Configurable Delays**: Customize base delay and maximum delay
+
+#### Other Error Types
+- **500 Server Errors**: Retries with exponential backoff
+- **Connection Errors**: Handles network timeouts and connection issues
+- **Timeout Errors**: Retries requests that exceed 30-second timeout
+- **Consecutive Failures**: Stops after 5 consecutive failures to prevent infinite loops
+
+#### Retry Configuration
+```bash
+# Custom retry settings
+python download_cves.py --all \
+  --max-retries 10 \
+  --retry-delay 180 \
+  --max-retry-delay 1200 \
+  --verbose
+
+# Conservative settings for unstable connections
+python download_cves.py --all \
+  --max-retries 15 \
+  --retry-delay 300 \
+  --max-retry-delay 1800
+```
+
+#### Download Statistics
+The script tracks and reports:
+- Total requests made
+- Successful vs failed requests
+- Rate limit hits
+- Retry attempts
+- Success rate percentage
+
+Example output:
+```
+Download completed!
+Statistics:
+  Total Requests: 150
+  Successful: 145
+  Failed: 5
+  Rate Limit Hits: 3
+  Retries: 8
+  Success Rate: 96.7%
+```
+
 ## Logging
 
 The script provides detailed logging:
@@ -205,10 +257,10 @@ The script provides detailed logging:
 2024-01-01 10:00:00 - INFO - Downloading CVEs for year 2024
 2024-01-01 10:00:01 - INFO - Fetching results 0 to 2000
 2024-01-01 10:00:05 - INFO - Fetching results 2000 to 4000
-2024-01-01 10:00:10 - INFO - Rate limit reached. Waiting 25.0 seconds...
-2024-01-01 10:00:35 - INFO - Downloaded 15420 CVEs
-2024-01-01 10:00:36 - INFO - Saving 15420 CVEs to files...
-2024-01-01 10:02:15 - INFO - CVE data saved successfully!
+2024-01-01 10:00:10 - WARNING - Rate limit exceeded (429). Retrying in 120 seconds... (attempt 1/4)
+2024-01-01 10:02:30 - INFO - Downloaded 15420 CVEs
+2024-01-01 10:02:31 - INFO - Saving 15420 CVEs to files...
+2024-01-01 10:04:15 - INFO - CVE data saved successfully!
 ```
 
 ## Performance Tips
@@ -218,21 +270,24 @@ The script provides detailed logging:
 3. **Use appropriate date ranges** to avoid unnecessary data
 4. **Monitor rate limits** - the script handles this automatically
 5. **Use SSD storage** for better file I/O performance
+6. **Use robust retry settings** for large downloads: `--max-retries 10 --retry-delay 180`
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Rate limit errors**: Get an API key or wait longer between requests
-2. **Network timeouts**: Check your internet connection
+1. **Rate limit errors (429)**: The script now handles these automatically with exponential backoff
+2. **Network timeouts**: Check your internet connection and use `--max-retries` to increase retry attempts
 3. **Disk space**: Ensure sufficient space (each year can be 1-2 GB)
 4. **Permission errors**: Check write permissions for output directory
+5. **API key issues**: Verify your API key is valid and not expired
 
 ### Getting Help
 
 - Check the NVD API documentation: https://nvd.nist.gov/developers
 - Review the script logs for detailed error messages
-- Ensure your API key is valid and not expired
+- Use `--verbose` flag for more detailed logging
+- Check download statistics for success rates and error patterns
 
 ## Data Quality
 
@@ -244,4 +299,4 @@ The NVD API provides high-quality, authoritative vulnerability data:
 - **Standardized**: Consistent format and structure
 - **Enriched**: Includes CVSS scores, CWE mappings, and CPE data
 
-This data is much more reliable than web scraping and is the recommended approach for vulnerability research and analysis. 
+This data is much more reliable than web scraping and is the recommended approach for vulnerability research and analysis.
