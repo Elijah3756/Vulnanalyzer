@@ -335,6 +335,61 @@ class NVDDownloader:
             }
         }
     
+    def download_all_cves(self, results_per_page: int = 2000) -> List[Dict[str, Any]]:
+        """
+        Download ALL CVEs from the NVD database.
+        
+        Args:
+            results_per_page: Number of results per API call (max 2000)
+            
+        Returns:
+            List of CVE records
+        """
+        all_cves = []
+        start_index = 0
+        
+        self.logger.info("Downloading ALL CVEs from NVD database...")
+        
+        while True:
+            params = {
+                "startIndex": start_index,
+                "resultsPerPage": results_per_page
+            }
+            
+            self.logger.info(f"Fetching results {start_index} to {start_index + results_per_page}")
+            
+            response_data = self._make_request(params)
+            if not response_data:
+                self.logger.error("Failed to get response from NVD API")
+                break
+            
+            vulnerabilities = response_data.get("vulnerabilities", [])
+            if not vulnerabilities:
+                self.logger.info("No more vulnerabilities found")
+                break
+            
+            all_cves.extend(vulnerabilities)
+            
+            # Check if we've got all results
+            total_results = response_data.get("totalResults", 0)
+            self.logger.info(f"Progress: {len(all_cves)} / {total_results} CVEs downloaded")
+            
+            if start_index + results_per_page >= total_results:
+                break
+            
+            start_index += results_per_page
+        
+        self.logger.info(f"Downloaded {len(all_cves)} total CVEs")
+        return all_cves
+    
+    def download_and_save_all(self) -> None:
+        """Download and save ALL CVEs from the NVD database."""
+        cves = self.download_all_cves()
+        if cves:
+            self.save_cves_to_files(cves)
+        else:
+            self.logger.error("No CVEs downloaded")
+    
     def download_and_save_by_year(self, year: int) -> None:
         """Download and save all CVEs for a specific year."""
         cves = self.download_cves_by_year(year)
@@ -381,6 +436,11 @@ def main():
         "--end-date",
         help="End date (YYYY-MM-DD) for custom date range"
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Download ALL CVEs from the NVD database"
+    )
     
     args = parser.parse_args()
     
@@ -397,6 +457,9 @@ def main():
         print(f"Downloading CVEs from {args.start_date} to {args.end_date}")
         cves = downloader.download_cves_by_date_range(args.start_date, args.end_date)
         downloader.save_cves_to_files(cves)
+    elif args.all:
+        print("Downloading ALL CVEs from NVD database...")
+        downloader.download_and_save_all()
     else:
         print(f"Downloading CVEs from the last {args.recent_days} days")
         downloader.download_and_save_recent(args.recent_days)

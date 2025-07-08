@@ -20,6 +20,7 @@ help:
 	@echo "  update-cves     - Download recent CVEs (last 30 days)"
 	@echo "  update-cves-year - Download CVEs for 2024"
 	@echo "  update-cves-test - Test download (last 1 day)"
+	@echo "  update-cves-all - Download all CVEs"
 	@echo "  download-cves-help - Show CVE download options"
 	@echo ""
 	@echo "Database Management:"
@@ -116,11 +117,17 @@ update-cves-year:
 update-cves-test:
 	./scripts/update_cve_database.sh --test
 
+update-cves-all:
+	cd scripts && python download_cves.py --all --output-dir ../cvelistV5/cves
+
 download-recent-cves:
 	cd scripts && python download_cves.py --recent-days 30 --output-dir ../cvelistV5/cves
 
 download-year-cves:
 	cd scripts && python download_cves.py --year 2024 --output-dir ../cvelistV5/cves
+
+download-all-cves:
+	cd scripts && python download_cves.py --all --output-dir ../cvelistV5/cves
 
 download-cves-help:
 	cd scripts && python download_cves.py --help

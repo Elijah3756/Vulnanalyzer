@@ -506,12 +506,20 @@ make update-cves
 # Download CVEs for a specific year
 make update-cves-year
 
+# Download ALL CVEs from the NVD database (comprehensive)
+make update-cves-all
+
 # Test download (last 1 day)
 make update-cves-test
 
 # Download with API key for higher rate limits
 ./scripts/update_cve_database.sh --recent --api-key YOUR_API_KEY
+
+# Direct script usage for all CVEs
+python scripts/download_cves.py --all --output-dir ./cvelistV5/cves
 ```
+
+**Note**: Downloading all CVEs will take significant time and storage space (several GB). It's recommended to use an API key for faster downloads and to run this during off-peak hours.
 
 The system downloads fresh CVE data in the official Record Format 5.x and organizes files by year and CVE number ranges for efficient processing.
 

@@ -46,6 +46,9 @@ python download_cves.py --year 2024
 
 # Download CVEs for a date range
 python download_cves.py --start-date 2024-01-01 --end-date 2024-12-31
+
+# Download ALL CVEs from the NVD database (comprehensive)
+python download_cves.py --all
 ```
 
 ### With API Key
@@ -54,9 +57,12 @@ python download_cves.py --start-date 2024-01-01 --end-date 2024-12-31
 # Using API key for higher rate limits
 python download_cves.py --api-key YOUR_API_KEY --year 2024
 
+# Download all CVEs with API key (recommended for large downloads)
+python download_cves.py --api-key YOUR_API_KEY --all
+
 # Set as environment variable
 export NVD_API_KEY=your_api_key_here
-python download_cves.py --api-key $NVD_API_KEY --year 2024
+python download_cves.py --api-key $NVD_API_KEY --all
 ```
 
 ### Custom Output Directory
@@ -140,6 +146,34 @@ for year in {2020..2024}; do
   python download_cves.py --year $year --output-dir ./cvelistV5/cves
   sleep 60  # Wait between years to be respectful
 done
+```
+
+### Comprehensive Download (All CVEs)
+
+The `--all` option downloads the complete CVE database from NVD. This is useful for:
+
+- **Complete vulnerability analysis**: Access to all historical and current vulnerabilities
+- **Offline analysis**: Work with the full dataset without internet dependency
+- **Research and development**: Comprehensive testing and validation
+
+**Important considerations:**
+
+- **Time**: Downloading all CVEs can take 2-6 hours depending on your connection and API key
+- **Storage**: Requires 2-4 GB of disk space for the complete dataset
+- **Rate limits**: Without an API key, this will take much longer due to rate limiting
+- **API key recommended**: Get a free API key for 10x faster downloads
+
+```bash
+# Download all CVEs (with API key recommended)
+python download_cves.py --api-key YOUR_API_KEY --all --output-dir ./cvelistV5/cves
+
+# Monitor progress - the script shows download progress
+# Example output:
+# 2024-01-01 10:00:00 - INFO - Downloading ALL CVEs from NVD database...
+# 2024-01-01 10:00:01 - INFO - Fetching results 0 to 2000
+# 2024-01-01 10:00:05 - INFO - Progress: 2000 / 285000 CVEs downloaded
+# 2024-01-01 10:00:10 - INFO - Fetching results 2000 to 4000
+# ...
 ```
 
 ## Integration with Vulnerability Analyzer
