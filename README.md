@@ -1,15 +1,18 @@
 # Vulnerability Analyzer
 
-A containerized CLI tool for analyzing vulnerability data using CVE, PURL, or CPE identifiers. This tool provides vulnerability introduction rates and historical usage rates by analyzing the extensive CVE database.
+A containerized CLI tool for analyzing vulnerability data using CVE, PURL, CPE identifiers, or performing comprehensive wildcard searches. This tool provides vulnerability introduction rates and historical usage rates by analyzing the extensive CVE database.
 
 ## Features
 
 - **Multi-format Support**: Analyze CVE IDs, Package URLs (PURL), or Common Platform Enumeration (CPE)
-- **Comprehensive Analysis**: Calculate vulnerability introduction rates and historical usage rates
+- **Wildcard Search**: Comprehensive analysis of any technology, language, or product (e.g., "python", "apache *", "nodejs")
+- **Comprehensive Component Analysis**: Break down PURL and CPE components for detailed risk assessment
+- **Enhanced Risk Metrics**: Calculate vulnerability activity rates, exploitation risks, and threat levels
 - **Database System**: SQLite database for lightning-fast queries (200-500x faster than file-based)
 - **Containerized**: Ready-to-use Docker container with all dependencies
 - **Fast Performance**: Intelligent caching and optimized data processing
 - **Flexible Output**: JSON or human-readable output formats
+- **Security Recommendations**: Actionable insights based on component analysis
 
 ## Installation
 
@@ -73,14 +76,56 @@ vuln-analyzer -v CVE-2020-0001
 vuln-analyzer --output-format pretty CVE-2020-0001
 ```
 
+### Comprehensive Component Analysis 🆕
+
+Perform detailed component-by-component analysis for PURL and CPE identifiers:
+
+```bash
+# Comprehensive PURL analysis
+vuln-analyzer --comprehensive "pkg:npm/express@4.17.1"
+
+# Comprehensive CPE analysis  
+vuln-analyzer --comprehensive "cpe:2.3:a:microsoft:windows:10:*:*:*:*:*:*:*"
+
+# With pretty output and verbose logging
+vuln-analyzer -c --output-format pretty -v "pkg:maven/log4j/log4j@2.14.1"
+```
+
+### Wildcard Search Examples 🆕
+
+Perform comprehensive analysis of any technology, language, or vendor:
+
+```bash
+# Analyze everything related to Python
+vuln-analyzer python
+
+# Analyze Apache products (explicit wildcard)
+vuln-analyzer "apache *"
+
+# Analyze Node.js ecosystem
+vuln-analyzer nodejs
+
+# Analyze Microsoft products
+vuln-analyzer microsoft
+
+# Analyze OpenSSL with comprehensive breakdown
+vuln-analyzer --comprehensive openssl
+
+# Database-powered wildcard search (faster)
+vuln-analyzer python --use-database cve_database.db
+
+# Pretty output for wildcard search
+vuln-analyzer --output-format pretty "java *"
+```
+
 ### Docker Examples
 
 ```bash
 # Basic CVE analysis
 docker run --rm vuln-analyzer CVE-2020-0001
 
-# Package analysis with verbose output
-docker run --rm vuln-analyzer -v "pkg:npm/express@4.17.1"
+# Comprehensive package analysis
+docker run --rm vuln-analyzer -c "pkg:npm/express@4.17.1"
 
 # CPE analysis with pretty output
 docker run --rm vuln-analyzer --output-format pretty "cpe:2.3:a:microsoft:windows:10:*:*:*:*:*:*:*"
@@ -89,46 +134,236 @@ docker run --rm vuln-analyzer --output-format pretty "cpe:2.3:a:microsoft:window
 docker run --rm -v /path/to/cvelistV5:/app/cvelistV5 vuln-analyzer CVE-2020-0001
 ```
 
-## Output Format
+## Output Formats
 
-### JSON Output (Default)
+### Standard Analysis Output
 
 ```json
 {
   "identifier": "CVE-2020-0001",
   "input_type": "cve",
   "matched_cves": ["CVE-2020-0001", "CVE-2020-0002", "..."],
-  "introduction_rate": 0.0234,
-  "history_usage_rate": 0.0156,
+  "vulnerability_activity_rate": 2.30,
+  "exploitation_risk": 0.152,
+  "relative_threat_level": 0.0085,
   "analysis_period": "Year 2020",
   "total_cves_analyzed": 15420,
-  "error_message": null,
   "metadata": {
     "vendor": "google_android",
     "product": "Android",
     "published_date": "2020-01-08T18:25:12+00:00",
-    "problem_types": ["Elevation of privilege"]
+    "risk_summary": {
+      "vulnerability_activity": {
+        "rate": 2.30,
+        "interpretation": "High - More active recently than historically"
+      },
+      "exploitation_risk": {
+        "rate": 0.152,
+        "interpretation": "High - 10-20% of vulnerabilities are exploited"
+      }
+    }
   }
 }
 ```
 
-### Pretty Output
+### Comprehensive Analysis Output 🆕
+
+```json
+{
+  "identifier": "pkg:npm/express@4.17.1",
+  "input_type": "purl",
+  "overall_analysis": { /* Standard analysis */ },
+  "component_analyses": [
+    {
+      "component_name": "Package Type",
+      "component_type": "package_type", 
+      "component_value": "npm",
+      "matched_cves": ["CVE-2021-1234", "..."],
+      "vulnerability_activity_rate": 1.85,
+      "exploitation_risk": 0.078,
+      "relative_threat_level": 0.0032,
+      "risk_level": "MEDIUM",
+      "risk_summary": { /* Component risk details */ }
+    },
+    {
+      "component_name": "Package Name",
+      "component_type": "package_name",
+      "component_value": "express", 
+      "matched_cves": ["CVE-2021-5678", "..."],
+      "vulnerability_activity_rate": 3.12,
+      "exploitation_risk": 0.124,
+      "relative_threat_level": 0.0089,
+      "risk_level": "HIGH"
+    }
+  ],
+  "aggregated_metrics": {
+    "total_unique_cves": 150,
+    "average_exploitation_risk": 0.089,
+    "highest_risk_component_name": "Package Name",
+    "most_active_component_name": "Package Name"
+  },
+  "recommendations": [
+    "HIGH PRIORITY: Package Name (express) shows high recent vulnerability activity",
+    "Consider upgrading from version 4.17.1 - current version has 5.2% exploitation risk",
+    "MEDIUM: This package has notable exploitation risk - plan security review"
+  ]
+}
+```
+
+### Pretty Output Format
 
 ```
-Analysis Results for CVE-2020-0001
+Comprehensive Analysis Results for pkg:npm/express@4.17.1
+======================================================================
+Input Type: PURL
+Components Analyzed: 3
+
+Overall Analysis:
+  Total Matched CVEs: 127
+  Overall Activity Rate: 2.45
+  Overall Exploitation Risk: 8.90%
+  Overall Threat Level: 0.067%
+
+Component-by-Component Analysis:
+--------------------------------------------------
+
+1. Package Type: npm
+   Risk Level: LOW
+   Matched CVEs: 45
+   Exploitation Risk: 3.20%
+   Activity Rate: 1.85
+   Top CVEs: CVE-2021-1234, CVE-2021-5678, ...
+
+2. Package Name: express  
+   Risk Level: HIGH
+   Matched CVEs: 89
+   Exploitation Risk: 12.40%
+   Activity Rate: 3.12
+   Top CVEs: CVE-2021-9999, CVE-2022-1111, ...
+
+Security Recommendations:
+========================================
+1. HIGH PRIORITY: Package Name (express) shows high recent vulnerability activity
+2. Consider upgrading from version 4.17.1 - current version has 5.2% exploitation risk  
+3. MEDIUM: This package has notable exploitation risk - plan security review
+```
+
+### Wildcard Search Output 🆕
+
+```
+Comprehensive Wildcard Analysis Results for 'python'
+================================================================================
+Search Term: python
+Total Matched CVEs: 1,247
+Categories Found: 4
+
+Overall Analysis:
+  Recent CVEs (2020-2025): 542
+  Historical CVEs (pre-2020): 705
+  Known Exploited CVEs: 18
+  Vulnerability Activity Rate: 1.54
+  Exploitation Risk: 1.44%
+  Database Coverage: 0.41%
+
+Temporal Analysis:
+  Trend: INCREASING
+  Recent 5 Years: 542 CVEs
+  Previous 5 Years: 298 CVEs
+  Peak Year: 2023 (156 CVEs)
+
+Category Breakdown:
+------------------------------------------------------------
+
+1. VENDORS
+   Total CVEs: 423
+   Unique Matches: 15
+   Activity Rate: 1.23
+   Exploitation Risk: 2.13% (MEDIUM)
+   Top Matches:
+     • python_software_foundation: 289 CVEs
+     • python: 78 CVEs
+     • djangoproject: 45 CVEs
+
+2. PRODUCTS  
+   Total CVEs: 892
+   Unique Matches: 42
+   Activity Rate: 1.67
+   Exploitation Risk: 1.79% (LOW)
+   Top Matches:
+     • python: 456 CVEs
+     • django: 123 CVEs
+     • pillow: 89 CVEs
+
+Security Recommendations:
 ==================================================
-Input Type: CVE
-Matched CVEs: 15
-Vulnerability Introduction Rate: 2.34%
-History Usage Rate: 1.56%
-Analysis Period: Year 2020
+1. MEDIUM: 'python' has moderate exploitation risk (1.44%) - monitor for updates
+2. INCREASED ACTIVITY: 'python' has higher recent vulnerability activity than historical average
+3. High-risk categories found: vendors
+4.   - vendors: 'python_software_foundation' has 289 CVEs with 2.13% exploitation risk
+5. SIGNIFICANT VOLUME: Found 1,247 CVEs related to 'python' - systematic review recommended
 
-Matched CVEs:
-  - CVE-2020-0001
-  - CVE-2020-0002
-  - CVE-2020-0003
-  ... and 12 more
+Sample CVEs (showing first 15 of 1,247):
+  - CVE-2024-0450
+  - CVE-2024-6923
+  - CVE-2023-40217
+  ...
 ```
+
+## Enhanced Risk Metrics 🆕
+
+### Vulnerability Activity Rate
+- **Formula**: `(Recent CVEs per year) / (Historical CVEs per year)`
+- **Meaning**: How much more active vulnerability discovery is recently vs historically
+- **Example**: 2.5 means 2.5x more CVEs per year recently than historically
+
+### Exploitation Risk  
+- **Formula**: `(KEV matches for component) / (Total CVEs for component)`
+- **Meaning**: What percentage of this component's vulnerabilities are actually exploited
+- **Example**: 0.15 means 15% of this component's CVEs are known to be exploited
+
+### Relative Threat Level
+- **Formula**: `(KEV matches for component) / (Total KEV entries)`
+- **Meaning**: How significant this component is in the overall threat landscape
+- **Example**: 0.05 means this component represents 5% of all known exploited vulnerabilities
+
+## Wildcard Search Features 🆕
+
+### Comprehensive Category Analysis
+- **Vendors**: Search across all vendor names for related organizations
+- **Products**: Analyze all products and technologies containing the search term  
+- **Descriptions**: Full-text search through vulnerability descriptions
+- **Problem Types**: Search vulnerability classifications and CWE categories
+
+### Temporal Analysis
+- **Trend Detection**: Identify increasing, decreasing, or stable vulnerability patterns
+- **Peak Analysis**: Find years with highest vulnerability counts
+- **Historical Comparison**: Compare recent (2020-2025) vs historical (pre-2020) activity
+
+### Risk Recommendations
+- **Automated Risk Assessment**: Category-level and overall risk scoring
+- **Actionable Insights**: Specific recommendations based on search results
+- **Priority Ranking**: Risk-based prioritization of security actions
+- **Volume Alerts**: Warnings for large vulnerability volumes requiring systematic review
+
+## Comprehensive Component Analysis Features
+
+### PURL Component Analysis
+- **Package Type**: Analyze ecosystem-level risks (npm, maven, pypi, etc.)
+- **Namespace**: Organization or scope-specific vulnerabilities
+- **Package Name**: Core package vulnerability analysis
+- **Version**: Specific version vulnerability assessment
+
+### CPE Component Analysis
+- **Vendor**: Vendor-specific vulnerability patterns
+- **Product**: Product-line security assessment
+- **Vendor+Product**: Combined risk analysis for specific vendor-product combinations
+- **Version**: Version-specific vulnerability analysis
+
+### Risk Recommendations
+- **Automated Risk Assessment**: Component-level risk scoring
+- **Actionable Insights**: Specific upgrade and security recommendations
+- **Priority Ranking**: Risk-based prioritization of security actions
+- **Trend Analysis**: Historical vulnerability activity patterns
 
 ## Supported Input Types
 
@@ -139,11 +374,19 @@ Matched CVEs:
 ### Package URLs (PURL)
 - Format: `pkg:type/namespace/name@version` (e.g., `pkg:npm/lodash@4.17.20`)
 - Analysis: Searches for vulnerabilities affecting the specific package
+- **Comprehensive Mode**: Analyzes each component separately for detailed risk assessment
 
 ### Common Platform Enumeration (CPE)
 - Format: `cpe:version:part:vendor:product:version:update:edition:language`
 - Example: `cpe:2.3:a:apache:http_server:2.4.41:*:*:*:*:*:*:*`
 - Analysis: Finds vulnerabilities for the specified platform/software
+- **Comprehensive Mode**: Breaks down vendor, product, and version components for granular analysis
+
+### Wildcard Search 🆕
+- Format: Single terms (`python`, `apache`, `nodejs`) or explicit wildcards (`python *`, `microsoft *`)
+- Analysis: Comprehensive search across vendors, products, descriptions, and vulnerability types
+- **Categories**: Analyzes vendors, products, descriptions, and problem types separately
+- **Auto-detection**: Automatically detects wildcard patterns and single-term searches
 
 ## Configuration
 
@@ -158,6 +401,7 @@ Matched CVEs:
 - `--cve-data-path`: Path to CVE data directory
 - `--use-database`: Use SQLite database for faster queries
 - `--output-format`: Output format (json, pretty)
+- `--comprehensive, -c`: Perform comprehensive component analysis (PURL/CPE only)
 - `--verbose, -v`: Enable verbose output
 - `--help`: Show help message
 

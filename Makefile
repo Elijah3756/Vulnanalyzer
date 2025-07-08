@@ -33,6 +33,9 @@ help:
 	@echo "  example-cve  - Analyze CVE-2020-0001"
 	@echo "  example-purl - Analyze pkg:npm/lodash@4.17.20"
 	@echo "  example-cpe  - Analyze CPE"
+	@echo "  example-wildcard - Analyze everything related to Python"
+	@echo "  example-wildcard-comprehensive - Comprehensive Apache analysis"
+	@echo "  example-wildcard-pretty - Pretty output for Node.js analysis"
 
 install:
 	uv pip install -e .
@@ -83,6 +86,15 @@ example-purl:
 
 example-cpe:
 	vuln-analyzer "cpe:2.3:a:apache:http_server:2.4.41:*:*:*:*:*:*:*"
+
+example-wildcard:
+	vuln-analyzer python
+
+example-wildcard-comprehensive:
+	vuln-analyzer --comprehensive "apache *"
+
+example-wildcard-pretty:
+	vuln-analyzer --output-format pretty nodejs
 
 # Docker examples
 docker-example-cve:
