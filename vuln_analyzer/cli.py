@@ -44,8 +44,8 @@ from .models import AnalysisResult
 @click.option(
     "--kev-file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    default="known_exploited_vulnerabilities.json",
-    help="Path to known exploited vulnerabilities JSON file",
+    default=None,
+    help="Path to known exploited vulnerabilities JSON file (optional)",
 )
 @click.option(
     "--comprehensive",
