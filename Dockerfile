@@ -23,8 +23,8 @@ COPY vuln_analyzer/ ./vuln_analyzer/
 # Install Python dependencies using uv
 RUN uv pip install --system .
 
-# Copy CVE data (if available)
-COPY cvelistV5/ ./cvelistV5/
+# Create CVE data directory (will be mounted as volume)
+RUN mkdir -p ./cvelistV5/cves
 
 # Create a non-root user
 RUN useradd --create-home --shell /bin/bash appuser
