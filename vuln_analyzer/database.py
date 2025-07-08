@@ -370,7 +370,7 @@ class CVEDatabase:
         min_year, max_year = cursor.fetchone()
         stats['year_range'] = f"{min_year}-{max_year}"
         
-        return stats
+        return stats 
     
     def get_enhanced_vulnerability_analysis(self, identifier: str, identifier_type: str) -> Dict[str, Any]:
         """Get comprehensive vulnerability analysis with risk assessment."""

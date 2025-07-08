@@ -17,6 +17,7 @@ RUN pip install uv
 
 # Copy project files
 COPY pyproject.toml .
+COPY README.md .
 COPY vuln_analyzer/ ./vuln_analyzer/
 
 # Install Python dependencies using uv
