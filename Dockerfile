@@ -32,13 +32,12 @@ WORKDIR /app
 # ==================================
 FROM base as development
 
-# Install development dependencies
-COPY pyproject.toml .
-RUN uv pip install --system -e ".[dev]"
-
 # Copy all source code for development
 COPY --chown=appuser:appuser . .
 
+# Install development dependencies
+
+RUN uv pip install --system -e ".[dev]"
 USER appuser
 
 # ==================================

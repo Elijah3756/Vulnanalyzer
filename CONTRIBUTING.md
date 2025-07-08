@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to Vulnerabililizer! This document provides guidelines for contributing to the project.
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
@@ -16,7 +16,7 @@ Thank you for your interest in contributing to Vulnerabililizer! This document p
    uv pip install -e ".[dev]"
    ```
 
-## 🛠 Development Setup
+## Development Setup
 
 ### Prerequisites
 - Python 3.8+
@@ -120,7 +120,7 @@ For feature requests, provide:
 - Example of how it would work
 - Any relevant implementation ideas
 
-## 📊 Database Contributions
+## Database Contributions
 
 ### Adding New Data Sources
 - Ensure data format compatibility
@@ -133,7 +133,7 @@ For feature requests, provide:
 - Include benchmarks in PR description
 - Test with large datasets
 
-## 🔧 Development Areas
+## Development Areas
 
 We welcome contributions in these areas:
 
@@ -155,7 +155,7 @@ We welcome contributions in these areas:
 - Export format support
 - Third-party tool integrations
 
-## 📚 Documentation
+## Documentation
 
 ### Types of Documentation
 - Code documentation (docstrings)
@@ -169,23 +169,23 @@ We welcome contributions in these areas:
 - Keep documentation up to date
 - Use Markdown for formatting
 
-## 🏆 Recognition
+## Recognition
 
 Contributors will be:
 - Listed in the project README
 - Mentioned in release notes
 - Credited in relevant documentation
 
-## 📞 Getting Help
+## Getting Help
 
 - **GitHub Issues**: For bugs and feature requests
 - **GitHub Discussions**: For questions and general discussion
 - **Documentation**: Check docs/ directory for detailed guides
 
-## 📄 License
+## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
 
-## 🙏 Thank You
+## Thank You
 
 Every contribution, no matter how small, helps make Vulnerabililizer better. We appreciate your time and effort! 

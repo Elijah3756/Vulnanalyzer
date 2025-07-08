@@ -2,7 +2,7 @@
 
 A **fully containerized** CLI tool for analyzing vulnerability data using CVE, PURL, CPE identifiers, or performing comprehensive wildcard searches. This tool provides vulnerability introduction rates and historical usage rates by analyzing the extensive CVE database.
 
-## 🚀 Quick Start (Containerized)
+## Quick Start (Containerized)
 
 Get started in 3 simple steps:
 
@@ -20,16 +20,16 @@ make analyze-wildcard     # Search Python ecosystem
 
 ## Features
 
-- **🐳 Fully Containerized**: Run from any machine with Docker - no local dependencies needed
-- **🔄 Multi-format Support**: Analyze CVE IDs, Package URLs (PURL), or Common Platform Enumeration (CPE)
-- **🔍 Wildcard Search**: Comprehensive analysis of any technology, language, or product (e.g., "python", "apache *", "nodejs")
-- **📊 Component Analysis**: Break down PURL and CPE components for detailed risk assessment
-- **⚡ Lightning Fast**: SQLite database for 200-500x faster queries than file-based analysis
-- **📈 Enhanced Risk Metrics**: Calculate vulnerability activity rates, exploitation risks, and threat levels
-- **🎯 Smart Recommendations**: Actionable insights based on component analysis
-- **🔧 Container Orchestration**: Complete Docker Compose setup with multiple services
+- **Fully Containerized**: Run from any machine with Docker - no local dependencies needed
+- **Multi-format Support**: Analyze CVE IDs, Package URLs (PURL), or Common Platform Enumeration (CPE)
+- **Wildcard Search**: Comprehensive analysis of any technology, language, or product (e.g., "python", "apache *", "nodejs")
+- **Component Analysis**: Break down PURL and CPE components for detailed risk assessment
+- **Lightning Fast**: SQLite database for 200-500x faster queries than file-based analysis
+- **Enhanced Risk Metrics**: Calculate vulnerability activity rates, exploitation risks, and threat levels
+- **Smart Recommendations**: Actionable insights based on component analysis
+- **Container Orchestration**: Complete Docker Compose setup with multiple services
 
-## 🐳 Container Installation & Setup
+## Container Installation & Setup
 
 ### Prerequisites
 - Docker (20.10+)
@@ -63,7 +63,7 @@ make db-stats
 make analyze-cve
 ```
 
-## 🎯 Container Usage
+## Container Usage
 
 ### Analysis Commands
 
@@ -109,7 +109,7 @@ echo "NVD_API_KEY=your_key_here" >> .env
 make download-recent
 ```
 
-## 🛠 Development Environment
+## Development Environment
 
 ### Start Development Container
 
@@ -137,7 +137,7 @@ make lint-local
 make format-local
 ```
 
-## 📋 Container Architecture
+## Container Architecture
 
 ### Services Overview
 
@@ -178,7 +178,7 @@ NVD_API_KEY=your_api_key_here
 LOG_LEVEL=INFO
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Setup
 
@@ -206,7 +206,7 @@ LOG_LEVEL=INFO                # DEBUG, INFO, WARNING, ERROR
 RESTART_POLICY=unless-stopped # Container restart policy
 ```
 
-## 📊 Container Performance
+## Container Performance
 
 ### Speed Comparison
 
@@ -223,7 +223,7 @@ RESTART_POLICY=unless-stopped # Container restart policy
 - **Full CVE Data**: ~2.1GB
 - **Total Setup**: ~3.5GB
 
-## 🚀 Production Deployment
+## Production Deployment
 
 ### Docker Compose Production
 
@@ -261,7 +261,7 @@ docker run --rm -v vuln_data:/data -v $(pwd):/backup alpine tar czf /backup/vuln
 docker run --rm -v vuln_data:/data -v $(pwd):/backup alpine tar xzf /backup/vuln_data_backup.tar.gz -C /data
 ```
 
-## 🔍 Usage Examples
+## Usage Examples
 
 ### Container Analysis Examples
 
@@ -336,7 +336,7 @@ docker volume inspect vuln_data
 docker run --rm vuln-analyzer:latest health
 ```
 
-## 🎁 Complete Container Workflows
+## Complete Container Workflows
 
 ### Daily Operations Workflow
 
@@ -376,7 +376,7 @@ docker tag vuln-analyzer:ci vuln-analyzer:latest
 docker-compose up -d
 ```
 
-## 📚 Migration from Local Installation
+## Migration from Local Installation
 
 If you have an existing local installation:
 
@@ -397,7 +397,7 @@ make analyze-cve
 make clean-local
 ```
 
-## 🆘 Support & Troubleshooting
+## Support & Troubleshooting
 
 ### Common Issues
 
@@ -433,11 +433,11 @@ make db-rebuild
 echo "NVD_API_KEY=your_key" >> .env
 ```
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! The containerized setup makes development easy:
 
@@ -451,7 +451,7 @@ make test-local
 # Submit PR
 ```
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - CVE Project for providing vulnerability data
 - NVD API for real-time vulnerability feeds  

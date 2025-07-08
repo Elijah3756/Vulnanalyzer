@@ -2,7 +2,7 @@
 set -e
 
 # Container entrypoint script for vulnerability analyzer
-echo "🚀 Starting Vulnerability Analyzer Container..."
+echo "Starting Vulnerability Analyzer Container..."
 
 # Function to log messages
 log() {
@@ -122,7 +122,7 @@ handle_command() {
 # Show help information
 show_help() {
     cat << EOF
-🔍 Vulnerability Analyzer Container
+Vulnerability Analyzer Container
 
 USAGE:
     docker run vuln-analyzer [COMMAND] [OPTIONS]
