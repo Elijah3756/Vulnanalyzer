@@ -1,160 +1,218 @@
-# VulnAnalyzer
+# `vulnanalyzer`
 
-> Professional vulnerability analysis tool for CVE, PURL, CPE, and wildcard searches
+`Vulnanalyzer` is a professional vulnerability analysis tool for CVE, PURL, CPE, and wildcard searches that provides detailed risk assessments, vulnerability activity rates, and exploitation risk analysis for software components, platforms, and technologies.
 
-## Overview
+## Getting Started
 
-VulnAnalyzer is a comprehensive command-line tool for analyzing vulnerability data from multiple sources including the National Vulnerability Database (NVD) and CISA Known Exploited Vulnerabilities (KEV) catalog. It provides detailed risk assessments, vulnerability activity rates, and exploitation risk analysis for software components, platforms, and technologies.
+### Install
 
-## Features
-**Multi-format Support** - Analyze CVE IDs, Package URLs (PURL), Common Platform Enumeration (CPE), and wildcard searches  
-**Comprehensive Risk Assessment** - Calculate vulnerability activity rates, exploitation risks, and relative threat levels  
-**Professional Output** - Both human-readable text and structured JSON output formats  
-**High-Performance Database** - SQLite database for fast queries across large datasets  
-**Automatic Updates** - Download and update vulnerability data from official sources  
-**Component Analysis** - Detailed breakdown of vulnerability patterns across different components
-
-## Installation
+#### From PyPI (Recommended)
 
 ```bash
-# Install from PyPI (recommended)
 pip install vulnanalyzer
-
-# Or install from source
-git clone https://github.com/Elijah3756/vulnerabililizer.git
-cd vulnerabililizer
-pip install -e .
 ```
 
-## Quick Start
+#### From Source
 
-### Initial Setup
+Clone down this repository and install from source. We recommend using [`uv`](https://docs.astral.sh/uv/) as your package manager.
+
 ```bash
-# Setup database with all CVEs and KEVs
+git clone https://github.com/Elijah3756/vulnerabililizer.git
+cd vulnerabililizer
+uv pip install -e .
+```
+
+### Usage
+
+Initial setup to download vulnerability data and create the database:
+
+```bash
 vulnanalyzer setup
 
 # Or with API key for faster downloads
 vulnanalyzer setup --api-key YOUR_NVD_API_KEY
 ```
 
-### Basic Usage
+Basic vulnerability analysis commands:
+
 ```bash
-# Analyze a specific CVE
 vulnanalyzer cve CVE-2021-44228
+```
 
-# Analyze a package URL
+```bash
 vulnanalyzer purl "pkg:npm/lodash@4.17.20"
+```
 
-# Perform wildcard search
+```bash
+vulnanalyzer cpe "cpe:2.3:a:apache:http_server:2.4.41:*:*:*:*:*:*:*"
+```
+
+```bash
 vulnanalyzer wildcard "python"
-
-# Comprehensive analysis
-vulnanalyzer purl "pkg:npm/express@4.17.1" --comprehensive
 ```
 
-## Commands
+Update the database with recent vulnerability data:
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `setup` | Initialize database with CVE/KEV data | `vulnanalyzer setup` |
-| `update` | Update with recent vulnerability data | `vulnanalyzer update --days 7` |
-| `cve` | Analyze a CVE identifier | `vulnanalyzer cve CVE-2021-44228` |
-| `purl` | Analyze a Package URL | `vulnanalyzer purl "pkg:npm/lodash@4.17.20"` |
-| `cpe` | Analyze a CPE identifier | `vulnanalyzer cpe "cpe:2.3:a:apache:http_server:2.4.41"` |
-| `wildcard` | Perform wildcard search | `vulnanalyzer wildcard "python"` |
-
-## Examples
-
-### CVE Analysis
 ```bash
-vulnanalyzer cve CVE-2021-44228 --output-format json
+vulnanalyzer update --days 7
 ```
 
-### Package Security Assessment
+### Arguments
+
+#### Setup Command
+
+| CLI Argument           | Description | Default | Environment Variable |
+| :---------------- | :------: | :----: | :-----: |
+| `--api-key`      |   NVD API key for faster downloads   | None | `NVD_API_KEY` |
+| `--verbose`, `-v`          |   Enable verbose output   | False | N/A |
+
+#### Update Command
+
+| CLI Argument           | Description | Default | Environment Variable |
+| :---------------- | :------: | :----: | :-----: |
+| `--days`      |   Number of days to look back for recent CVEs   | 30 | N/A |
+| `--api-key`          |   NVD API key for faster downloads   | None | `NVD_API_KEY` |
+| `--verbose`, `-v`          |   Enable verbose output   | False | N/A |
+
+#### Analysis Commands (cve, purl, cpe, wildcard)
+
+| CLI Argument           | Description | Default | Environment Variable |
+| :---------------- | :------: | :----: | :-----: |
+| `--comprehensive`      |   Perform comprehensive component analysis   | False | N/A |
+| `--output-format`          |   Output format: text, json, both   | both | N/A |
+| `--verbose`, `-v`          |   Enable verbose output   | False | N/A |
+
+#### Global Environment Variables
+
+| Environment Variable           | Description | Default |
+| :---------------- | :------: | :----: |
+| `VULNANALYZER_DATA`      |   Data directory path   | `~/.vulnanalyzer` |
+| `CVE_DATA_PATH`          |   CVE JSON files directory   | `~/.vulnanalyzer/cvelistV5/cves` |
+| `DATABASE_PATH`          |   SQLite database path   | `~/.vulnanalyzer/databases/cve_database.db` |
+| `KEV_FILE_PATH`          |   Known exploited vulnerabilities file   | `~/.vulnanalyzer/known_exploited_vulnerabilities_catalog.json` |
+
+### Container Usage
+
+We provide a containerized image for ease of use through Docker and Make commands.
+
+#### Using Make (Recommended)
+
 ```bash
-vulnanalyzer purl "pkg:npm/express@4.17.1" --comprehensive
+# Complete setup from scratch
+make quick-start
+
+# Analyze specific vulnerabilities
+make analyze-cve          # Analyze Log4Shell
+make analyze-purl         # Analyze npm package
+make analyze-wildcard     # Analyze Python ecosystem
+
+# Database operations
+make setup                # Download data and build database
+make download-recent      # Get latest 30 days of CVEs
+make db-stats            # Show database statistics
 ```
 
-### Technology Ecosystem Analysis
+#### Direct Docker Usage
+
 ```bash
-vulnanalyzer wildcard "nodejs" --output-format both
+# Build the image
+docker build -t vuln-analyzer:latest .
+
+# Run analysis
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest cve CVE-2021-44228
+
+# Setup database
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest create-database
 ```
 
-### Platform Vulnerability Assessment
+## Testing Suite
+
+The project includes a comprehensive test suite covering:
+
+- **CLI Command Testing** - Validates all command-line interfaces
+- **Analysis Engine Testing** - Tests CVE, PURL, CPE, and wildcard analysis
+- **Database Integration Testing** - Verifies SQLite database operations
+- **API Integration Testing** - Tests NVD API downloads and KEV data processing
+
+Run tests locally:
+
 ```bash
-vulnanalyzer cpe "cpe:2.3:a:microsoft:windows:10:*:*:*:*:*:*:*"
+# Install test dependencies
+uv pip install -e ".[dev]"
+
+# Run test suite
+pytest
+
+# Run with coverage
+pytest --cov=vulnanalyzer --cov-report=html
 ```
 
-## Output Formats
+## CVE Analysis Details
 
-**Text Output** - Human-readable analysis with risk metrics, interpretations, and recommendations
+CVE analysis provides comprehensive vulnerability assessment for specific CVE identifiers:
 
-**JSON Output** - Structured data for programmatic processing:
-```json
-{
-  "identifier": "CVE-2021-44228",
-  "input_type": "cve",
-  "matched_cves": ["CVE-2021-44228", "CVE-2021-45046"],
-  "vulnerability_activity_rate": 2.5,
-  "exploitation_risk": 0.12,
-  "relative_threat_level": 0.003,
-  "metadata": {...}
-}
+- **Risk Metrics**: Vulnerability activity rate, exploitation risk, relative threat level
+- **Related Vulnerabilities**: Finds CVEs affecting the same vendor/product
+- **Temporal Analysis**: Recent vs historical vulnerability patterns
+- **KEV Integration**: Identifies known exploited vulnerabilities
+- **Vendor/Product Context**: Extracts affected vendors and products
+
+**Example Output:**
+```
+VULNERABILITY ANALYSIS RESULTS
+Identifier: CVE-2021-44228
+Type: CVE
+Total CVEs Analyzed: 25,432
+Matched CVEs: 15
+
+RISK METRICS
+Vulnerability Activity Rate: 2.10 (High - More active recently)
+Exploitation Risk: 18.50% (High - 10-20% of vulnerabilities exploited)
+Relative Threat Level: 0.003% (Low - 0.2-1% of known exploited vulnerabilities)
 ```
 
-## Configuration
+## PURL and CPE Analysis Details
 
-### API Key Setup
-Get a free API key from NVD for faster downloads:
-1. Visit: https://nvd.nist.gov/developers/request-an-api-key
-2. Use with: `vulnanalyzer setup --api-key YOUR_KEY`
+Package URL (PURL) and Common Platform Enumeration (CPE) analysis provides component-level security assessment:
 
-### Data Directory
+### PURL Analysis
+- **Package Ecosystem Analysis**: Evaluates npm, Maven, PyPI, and other package types
+- **Component Breakdown**: Separate analysis of package type, namespace, name, and version
+- **Version-Specific Risks**: Identifies vulnerabilities in specific package versions
+- **Comprehensive Mode**: Detailed component-by-component risk assessment
+
+### CPE Analysis
+- **Platform Security Assessment**: Analyzes operating systems, applications, and hardware
+- **Vendor Risk Profiles**: Evaluates security track record of specific vendors
+- **Product Vulnerability Patterns**: Identifies vulnerability trends for specific products
+- **Version Impact Analysis**: Assesses risks for specific software versions
+
+**Example Comprehensive Analysis:**
 ```
-~/.vulnanalyzer/
-├── cvelistV5/cves/           # CVE JSON files
-├── databases/                # SQLite databases
-├── downloads/                # Downloaded data
-└── known_exploited_vulnerabilities_catalog
+Component Breakdown:
+  Package Type (npm):
+    Risk Level: MEDIUM
+    CVEs Found: 1,250
+    Exploitation Risk: 8.40%
+    Activity Rate: 1.85
+
+  Package Name (express):
+    Risk Level: HIGH  
+    CVEs Found: 28
+    Exploitation Risk: 14.29%
+    Activity Rate: 2.10
+
+Top Recommendations:
+  1. HIGH PRIORITY: 1 component(s) have high exploitation risk (>10%)
+  2. Package 'express' shows high recent vulnerability activity - monitor for updates
+  3. MEDIUM: This package has notable exploitation risk - plan security review
 ```
 
-## Development
+## Known Issues and Future Features
 
-### Prerequisites
-- Python 3.9+
-- pip or uv package manager
-
-### Setup
-```bash
-git clone https://github.com/Elijah3756/vulnerabililizer.git
-cd vulnerabililizer
-pip install -e ".[dev]"
-```
-
-## Data Sources
-
-- **NVD API v2.0** - Primary source for CVE data
-- **CISA KEV Catalog** - Known exploited vulnerabilities
-- **CVE Record Format 5.x** - Standardized vulnerability data
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/Elijah3756/vulnerabililizer/issues)
-- **Documentation**: [README](https://github.com/Elijah3756/vulnerabililizer#readme)
-- **Repository**: [GitHub](https://github.com/Elijah3756/vulnerabililizer)
-
----
-
-**Acknowledgments**: NVD for vulnerability data, CISA for KEV catalog, and the security research community. 
+- [ ] Database query optimization for very large datasets (>1M CVEs)
+- [ ] SBOM (Software Bill of Materials) import/export support
+- [ ] Integration with CI/CD pipelines for automated security scanning
+- [ ] Enhanced wildcard search with fuzzy matching
+- [ ] Custom vulnerability scoring based on organizational risk factors
+- [ ] Export reports in PDF and CSV formats 
