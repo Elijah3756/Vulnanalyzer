@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "vulnanalyzer"
 version = "0.1.0"
-description = "Professional vulnerability analysis tool for CVE, PURL, CPE, and wildcard searches"
+description = "vulnerability analysis tool for CVE, PURL, CPE, and wildcard searches"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+
 authors = [
-    {name = "Vulnerability Analysis Team", email = "security@example.com"}
+    {name = "2LT Elijah Bellamy ", email = "security@example.com"}
 ]
 keywords = ["security", "vulnerability", "cve", "purl", "cpe", "analysis"]
 classifiers = [
