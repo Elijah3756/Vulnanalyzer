@@ -51,7 +51,7 @@ docker-build:
 
 docker-run:
 	@echo "Running vulnerability analyzer container..."
-	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest --help
 
 docker-shell:
 	@echo "Starting interactive shell..."
@@ -112,19 +112,19 @@ db-rebuild:
 
 analyze-cve:
 	@echo "Analyzing CVE-2021-44228 (Log4Shell)..."
-	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest CVE-2021-44228 --output-format pretty
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest cve CVE-2021-44228
 
 analyze-purl:
 	@echo "Analyzing npm package (lodash)..."
-	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest "pkg:npm/lodash@4.17.20" --output-format pretty
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest purl "pkg:npm/lodash@4.17.20"
 
 analyze-wildcard:
 	@echo "Analyzing Python ecosystem..."
-	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest python --output-format pretty
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest wildcard "python"
 
 analyze-comprehensive:
 	@echo "Comprehensive Apache analysis..."
-	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest --comprehensive "apache *" --output-format pretty
+	docker run --rm -v vuln_data:/app/data vuln-analyzer:latest wildcard "apache *" --comprehensive
 
 # ================================================
 # Development

@@ -49,9 +49,8 @@ RUN mkdir -p /app/data/cvelistV5/cves \
              /app/logs \
     && chown -R appuser:appuser /app
 
-# Copy entrypoint script
-COPY --chown=appuser:appuser docker/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# Make main script executable
+RUN chmod +x /app/scripts/main.py
 
 # Switch to non-root user
 USER appuser
@@ -72,5 +71,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 8000
 
 # Set entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["python", "/app/scripts/main.py"]
 CMD ["--help"] 

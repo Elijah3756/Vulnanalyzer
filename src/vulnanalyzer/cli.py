@@ -281,151 +281,51 @@ def handle_analysis_command(args: argparse.Namespace) -> None:
 
 def main() -> None:
     """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        prog="vulnanalyzer",
-        description="Professional vulnerability analysis tool for CVE, PURL, CPE, and wildcard searches",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  vulnanalyzer cve CVE-2021-44228
-  vulnanalyzer purl "pkg:npm/lodash@4.17.20" --comprehensive
-  vulnanalyzer cpe "cpe:2.3:a:apache:http_server:2.4.41:*:*:*:*:*:*:*"
-  vulnanalyzer wildcard "python"
-  vulnanalyzer setup
-  vulnanalyzer update --days 7
-        """
-    )
+    # Parse arguments from sys.argv - this assumes arguments are already parsed by main.py
+    if len(sys.argv) < 2:
+        print("Error: No command specified")
+        sys.exit(1)
     
-    # Global options
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
-    )
-    parser.add_argument(
-        "--api-key",
-        help="NVD API key for faster downloads (get from https://nvd.nist.gov/developers/request-an-api-key)"
-    )
-
+    # Create a simple namespace from command line arguments
+    class Args:
+        def __init__(self):
+            self.command = sys.argv[1] if len(sys.argv) > 1 else None
+            self.identifier = sys.argv[2] if len(sys.argv) > 2 else None
+            self.verbose = "--verbose" in sys.argv or "-v" in sys.argv
+            self.api_key = None
+            self.comprehensive = "--comprehensive" in sys.argv
+            self.days = 30
+            self.output_format = "both"
+            self.type = None  # Add type attribute for compatibility
+            
+            # Extract API key if present
+            if "--api-key" in sys.argv:
+                try:
+                    api_key_index = sys.argv.index("--api-key")
+                    if api_key_index + 1 < len(sys.argv):
+                        self.api_key = sys.argv[api_key_index + 1]
+                except (ValueError, IndexError):
+                    pass
+            
+            # Extract output format if present
+            if "--output-format" in sys.argv:
+                try:
+                    format_index = sys.argv.index("--output-format")
+                    if format_index + 1 < len(sys.argv):
+                        self.output_format = sys.argv[format_index + 1]
+                except (ValueError, IndexError):
+                    pass
+            
+            # Extract days if present
+            if "--days" in sys.argv:
+                try:
+                    days_index = sys.argv.index("--days")
+                    if days_index + 1 < len(sys.argv):
+                        self.days = int(sys.argv[days_index + 1])
+                except (ValueError, IndexError):
+                    pass
     
-    # Create subparsers for different commands
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
-    # Analysis commands
-    analysis_parser = subparsers.add_parser(
-        "cve",
-        help="Analyze a CVE identifier"
-    )
-    analysis_parser.add_argument(
-        "identifier",
-        help="CVE identifier (e.g., CVE-2021-44228)"
-    )
-    analysis_parser.add_argument(
-        "--type",
-        choices=["cve"],
-        help="Input type (auto-detected if not specified)"
-    )
-    analysis_parser.add_argument(
-        "--comprehensive",
-        action="store_true",
-        help="Perform comprehensive analysis"
-    )
-    analysis_parser.add_argument(
-        "--output-format",
-        choices=["text", "json", "both"],
-        default="both",
-        help="Output format (default: both)"
-    )
-    
-    purl_parser = subparsers.add_parser(
-        "purl",
-        help="Analyze a Package URL (PURL)"
-    )
-    purl_parser.add_argument(
-        "identifier",
-        help="Package URL (e.g., pkg:npm/lodash@4.17.20)"
-    )
-    purl_parser.add_argument(
-        "--type",
-        choices=["purl"],
-        help="Input type (auto-detected if not specified)"
-    )
-    purl_parser.add_argument(
-        "--comprehensive",
-        action="store_true",
-        help="Perform comprehensive component analysis"
-    )
-    purl_parser.add_argument(
-        "--output-format",
-        choices=["text", "json", "both"],
-        default="both",
-        help="Output format (default: both)"
-    )
-    
-    cpe_parser = subparsers.add_parser(
-        "cpe",
-        help="Analyze a Common Platform Enumeration (CPE)"
-    )
-    cpe_parser.add_argument(
-        "identifier",
-        help="CPE identifier (e.g., cpe:2.3:a:apache:http_server:2.4.41:*:*:*:*:*:*:*)"
-    )
-    cpe_parser.add_argument(
-        "--type",
-        choices=["cpe"],
-        help="Input type (auto-detected if not specified)"
-    )
-    cpe_parser.add_argument(
-        "--comprehensive",
-        action="store_true",
-        help="Perform comprehensive component analysis"
-    )
-    cpe_parser.add_argument(
-        "--output-format",
-        choices=["text", "json", "both"],
-        default="both",
-        help="Output format (default: both)"
-    )
-    
-    wildcard_parser = subparsers.add_parser(
-        "wildcard",
-        help="Perform wildcard vulnerability search"
-    )
-    wildcard_parser.add_argument(
-        "identifier",
-        help="Search term (e.g., python, apache, nodejs)"
-    )
-    wildcard_parser.add_argument(
-        "--type",
-        choices=["wildcard"],
-        help="Input type (auto-detected if not specified)"
-    )
-    wildcard_parser.add_argument(
-        "--output-format",
-        choices=["text", "json", "both"],
-        default="both",
-        help="Output format (default: both)"
-    )
-    
-    # Setup and update commands
-    setup_parser = subparsers.add_parser(
-        "setup",
-        help="Setup database with all CVEs and KEVs"
-    )
-    
-    update_parser = subparsers.add_parser(
-        "update",
-        help="Update with recent vulnerability data"
-    )
-    update_parser.add_argument(
-        "--days",
-        type=int,
-        default=30,
-        help="Number of days to look back for recent CVEs (default: 30)"
-    )
-    
-    # Parse arguments
-    args = parser.parse_args()
+    args = Args()
     
     # Handle different commands
     if args.command == "setup":
@@ -434,14 +334,7 @@ Examples:
         handle_update_command(args)
     elif args.command in ["cve", "purl", "cpe", "wildcard"]:
         handle_analysis_command(args)
-    elif args.command is None:
-        parser.print_help()
-        sys.exit(1)
     else:
-        # This shouldn't happen with proper subparsers, but just in case
-        parser.print_help()
+        print(f"Error: Unknown command '{args.command}'")
         sys.exit(1)
 
-
-if __name__ == "__main__":
-    main() 

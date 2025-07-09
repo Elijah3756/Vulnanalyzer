@@ -123,6 +123,12 @@ docker run --rm -v vuln_data:/app/data vuln-analyzer:latest cve CVE-2021-44228
 
 # Setup database
 docker run --rm -v vuln_data:/app/data vuln-analyzer:latest create-database
+
+# Download recent CVE data
+docker run --rm -v vuln_data:/app/data vuln-analyzer:latest download-cves --recent-days 30
+
+# Interactive shell
+docker run --rm -it -v vuln_data:/app/data vuln-analyzer:latest shell
 ```
 
 ## Testing Suite
