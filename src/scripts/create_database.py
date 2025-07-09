@@ -578,8 +578,8 @@ def main():
     parser.add_argument(
         "--kev-file",
         type=Path,
-        default=os.path.expanduser('~/.vulnanalyzer/known_exploited_vulnerabilities.json'),
-        help=f"Known exploited vulnerabilities JSON file (default: $KEV_FILE_PATH or ~/.vulnanalyzer/known_exploited_vulnerabilities.json)"
+        default=os.path.expanduser('~/.vulnanalyzer/known_exploited_vulnerabilities_catalog.json'),
+        help=f"Known exploited vulnerabilities JSON file (default: $KEV_FILE_PATH or ~/.vulnanalyzer/known_exploited_vulnerabilities_catalog)"
     )
     parser.add_argument(
         "--db-path",

@@ -32,14 +32,23 @@ def get_default_paths() -> Dict[str, Path]:
         'data_dir': data_dir,
         'cve_data_path': data_dir / 'cvelistV5' / 'cves',
         'database_path': data_dir / 'databases' / 'cve_database.db',
-        'kev_file_path': data_dir / 'known_exploited_vulnerabilities.json',
+        'kev_file_path': data_dir / 'known_exploited_vulnerabilities_catalog.json',
         'download_dir': data_dir / 'downloads'
     }
 
 
 def setup_directories(paths: Dict[str, Path]) -> None:
     """Create necessary directories if they don't exist."""
-    for path in paths.values():
+    # Only create directories for paths that should be directories
+    directories_to_create = [
+        paths['data_dir'],
+        paths['cve_data_path'], 
+        paths['database_path'].parent,  # parent directory of database file
+        paths['download_dir'],
+        paths['kev_file_path'].parent   # parent directory of KEV file
+    ]
+    
+    for path in directories_to_create:
         if isinstance(path, Path):
             path.mkdir(parents=True, exist_ok=True)
 

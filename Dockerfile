@@ -58,7 +58,7 @@ USER appuser
 
 # Set container-friendly environment variables
 ENV CVE_DATA_PATH=/app/data/cvelistV5/cves \
-    KEV_FILE_PATH=/app/data/known_exploited_vulnerabilities.json \
+    KEV_FILE_PATH=/app/data/known_exploited_vulnerabilities_catalog \
     DATABASE_PATH=/app/data/databases/cve_database.db \
     DOWNLOAD_DIR=/app/data/downloads \
     LOG_LEVEL=INFO \

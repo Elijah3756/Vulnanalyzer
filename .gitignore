@@ -191,7 +191,7 @@ cvelistV5/
 !cvelistV5/.gitkeep
 
 # Known exploited vulnerabilities JSON (large file)
-known_exploited_vulnerabilities.json
+known_exploited_vulnerabilities_catalog
 
 # Temporary and cache files
 .cache/

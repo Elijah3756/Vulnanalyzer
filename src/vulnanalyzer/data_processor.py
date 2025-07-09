@@ -33,7 +33,7 @@ class VulnerabilityProcessor:
             if env_kev_path:
                 self.kev_file_path = Path(env_kev_path)
             else:
-                self.kev_file_path = Path(os.path.expanduser('~/.vulnanalyzer/known_exploited_vulnerabilities.json'))
+                self.kev_file_path = Path(os.path.expanduser('~/.vulnanalyzer/known_exploited_vulnerabilities_catalog'))
         else:
             self.kev_file_path = kev_file_path
         

@@ -115,7 +115,7 @@ Get a free API key from NVD for faster downloads:
 ├── cvelistV5/cves/           # CVE JSON files
 ├── databases/                # SQLite databases
 ├── downloads/                # Downloaded data
-└── known_exploited_vulnerabilities.json
+└── known_exploited_vulnerabilities_catalog
 ```
 
 ## Development

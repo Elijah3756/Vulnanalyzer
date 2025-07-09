@@ -61,6 +61,9 @@ class DatabaseManager:
         """Ensure all necessary directories exist."""
         for path in [self.database_path.parent, self.cve_data_path, self.download_dir]:
             path.mkdir(parents=True, exist_ok=True)
+        
+        # Ensure the parent directory of the KEV file exists, but not the file itself
+        self.kev_file_path.parent.mkdir(parents=True, exist_ok=True)
     
     def _rate_limit_check(self) -> None:
         """Check and enforce rate limiting."""
@@ -368,8 +371,9 @@ class DatabaseManager:
             
             # Import here to avoid circular imports
             import sys
-            import os
-            sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
+            from pathlib import Path
+            scripts_path = Path(__file__).parent.parent / 'scripts'
+            sys.path.insert(0, str(scripts_path))
             from create_database import CVEDatabaseBuilder
             
             builder = CVEDatabaseBuilder(
