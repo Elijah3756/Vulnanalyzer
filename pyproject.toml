@@ -3,19 +3,37 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "vuln-analyzer"
+name = "vulnanalyzer"
 version = "0.1.0"
-description = "CLI tool for vulnerability analysis using CVE, PURL, or CPE"
+description = "Professional vulnerability analysis tool for CVE, PURL, CPE, and wildcard searches"
 readme = "README.md"
 requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Vulnerability Analysis Team", email = "security@example.com"}
+]
+keywords = ["security", "vulnerability", "cve", "purl", "cpe", "analysis"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
-    "click>=8.0.0",
     "pandas>=2.0.0",
     "jsonschema>=4.0.0",
     "python-dateutil>=2.8.0",
     "tqdm>=4.65.0",
     "packaging>=23.0",
     "requests>=2.25.0",
+    "tabulate>=0.9.0",
 ]
 
 [project.optional-dependencies]
@@ -27,7 +45,13 @@ dev = [
 ]
 
 [project.scripts]
-vuln-analyzer = "vuln_analyzer.cli:main"
+vulnanalyzer = "vulnanalyzer.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/your-org/vulnanalyzer"
+Documentation = "https://github.com/your-org/vulnanalyzer#readme"
+Repository = "https://github.com/your-org/vulnanalyzer.git"
+Issues = "https://github.com/your-org/vulnanalyzer/issues"
 
 [tool.black]
 line-length = 88
@@ -38,3 +62,6 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true 
+
+[tool.hatch.build]
+sources = ["src"] 

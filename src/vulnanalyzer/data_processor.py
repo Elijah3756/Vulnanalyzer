@@ -21,7 +21,7 @@ class VulnerabilityProcessor:
         """Initialize the processor with CVE data path."""
         # Use environment variables for default paths
         if cve_data_path is None:
-            cve_data_path = Path(os.getenv('CVE_DATA_PATH', './cvelistV5/cves'))
+            cve_data_path = Path(os.getenv('CVE_DATA_PATH', os.path.expanduser('~/.vulnanalyzer/cvelistV5/cves')))
         
         self.cve_data_path = cve_data_path
         self.verbose = verbose
@@ -33,7 +33,7 @@ class VulnerabilityProcessor:
             if env_kev_path:
                 self.kev_file_path = Path(env_kev_path)
             else:
-                self.kev_file_path = Path('known_exploited_vulnerabilities.json')
+                self.kev_file_path = Path(os.path.expanduser('~/.vulnanalyzer/known_exploited_vulnerabilities.json'))
         else:
             self.kev_file_path = kev_file_path
         

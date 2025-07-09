@@ -6,7 +6,7 @@
 set -e  # Exit on any error
 
 # Configuration
-DEFAULT_OUTPUT_DIR="./cvelistV5/cves"
+DEFAULT_OUTPUT_DIR="$HOME/.vulnanalyzer/cvelistV5/cves"  # For local dev. For container: /app/data/cvelistV5/cves
 DEFAULT_DAYS=30
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -44,7 +44,7 @@ Download and update CVE data from the NVD API
 OPTIONS:
     -h, --help              Show this help message
     -k, --api-key KEY       NVD API key (recommended for faster downloads)
-    -o, --output-dir DIR    Output directory (default: $DEFAULT_OUTPUT_DIR)
+    -o, --output-dir DIR    Output directory (default: ~/.vulnanalyzer/cvelistV5/cves)
     -d, --days DAYS         Download CVEs from last N days (default: $DEFAULT_DAYS)
     -y, --year YEAR         Download CVEs for specific year
     -r, --recent            Download recent CVEs (last 30 days)
@@ -113,15 +113,15 @@ test_integration() {
     local cve_id=$(basename "$sample_cve" .json)
     
     # Test with vulnerability analyzer
-    if command -v vuln-analyzer >/dev/null 2>&1; then
+    if command -v vulnanalyzer >/dev/null 2>&1; then
         print_info "Testing CVE $cve_id with vulnerability analyzer..."
-        if vuln-analyzer "$cve_id" --cve-data-path "$output_dir" >/dev/null 2>&1; then
+        if vulnanalyzer cve "$cve_id" >/dev/null 2>&1; then
             print_success "Integration test passed!"
         else
             print_warning "Integration test failed, but CVEs were downloaded successfully"
         fi
     else
-        print_warning "vuln-analyzer not found. Install with: uv pip install -e ."
+        print_warning "vulnanalyzer not found. Install with: uv pip install -e ."
     fi
 }
 
@@ -243,7 +243,7 @@ main() {
         
         print_success "CVE database update completed!"
         print_info "You can now use the vulnerability analyzer with the updated data:"
-        print_info "  vuln-analyzer CVE-2024-0001 --cve-data-path $output_dir"
+        print_info "  vulnanalyzer cve CVE-2024-0001"
         
     else
         print_error "CVE download failed!"

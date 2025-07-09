@@ -34,9 +34,8 @@ FROM base
 
 # Copy necessary files
 COPY pyproject.toml README.md ./
-COPY vuln_analyzer/ ./vuln_analyzer/
-COPY scripts/ ./scripts/
-COPY examples/ ./examples/
+COPY src/vulnanalyzer/ ./vulnanalyzer/
+COPY src/scripts/ ./scripts/
 COPY docs/ ./docs/
 
 # Install dependencies
@@ -67,7 +66,7 @@ ENV CVE_DATA_PATH=/app/data/cvelistV5/cves \
 
 # Create health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import vuln_analyzer; print('OK')" || exit 1
+    CMD python -c "import vulnanalyzer; print('OK')" || exit 1
 
 # Expose port for future web interface
 EXPOSE 8000

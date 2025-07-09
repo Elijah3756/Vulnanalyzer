@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 import requests
 from tqdm import tqdm
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 class NVDDownloader:
@@ -547,8 +549,8 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default=os.getenv('DOWNLOAD_DIR', "downloaded_cves"),
-        help=f"Output directory for CVE data (default: $DOWNLOAD_DIR or downloaded_cves)"
+        default=os.path.expanduser('~/.vulnanalyzer/cvelistV5/cves'),
+        help=f"Output directory for CVE data (default: $DOWNLOAD_DIR or ~/.vulnanalyzer/cvelistV5/cves)"
     )
     parser.add_argument(
         "--year",

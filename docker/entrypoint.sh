@@ -98,7 +98,7 @@ handle_command() {
             ;;
         "health"|"healthcheck")
             # Health check
-            python -c "import vuln_analyzer; print('Container is healthy')"
+            python -c "import vulnanalyzer; print('Container is healthy')"
             exit 0
             ;;
         "--help"|"help")
@@ -112,9 +112,7 @@ handle_command() {
         *)
             # Pass to vulnerability analyzer
             log "Running vulnerability analysis..."
-            exec vuln-analyzer \
-                --cve-data-path "${CVE_DATA_PATH}" \
-                --kev-file "${KEV_FILE_PATH}" "$@"
+            exec vulnanalyzer "$@"
             ;;
     esac
 }
@@ -144,16 +142,16 @@ CONTAINER COMMANDS:
 
 EXAMPLES:
     # Analyze CVE with database
-    docker run vuln-analyzer CVE-2021-44228 --use-database /app/data/databases/cve_database.db
+    docker run vuln-analyzer cve CVE-2021-44228
     
     # Build database from mounted CVE data
-    docker run -v /host/cves:/app/data/cvelistV5/cves vuln-analyzer create-database
+    docker run -v /host/cves:/app/data/cvelistV5/cves vulnanalyzer create-database
     
     # Download recent CVEs
-    docker run vuln-analyzer download-cves --recent-days 30
+    docker run vulnanalyzer download-cves --recent-days 30
     
     # Comprehensive wildcard analysis
-    docker run vuln-analyzer --comprehensive "python *" --output-format pretty
+    docker run vulnanalyzer wildcard "python" --comprehensive
 
 ENVIRONMENT VARIABLES:
     CVE_DATA_PATH=/app/data/cvelistV5/cves
@@ -167,7 +165,7 @@ VOLUME MOUNTS:
     /app/data/databases          - SQLite databases
     /app/config                  - Configuration files
 
-For more information, visit: https://github.com/your-org/vuln-analyzer
+For more information, visit: https://github.com/your-org/vulnanalyzer
 EOF
 }
 

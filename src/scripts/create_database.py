@@ -13,6 +13,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 import argparse
 import os
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tqdm import tqdm
 
@@ -569,19 +572,19 @@ def main():
     parser.add_argument(
         "--cve-dir",
         type=Path,
-        default=os.getenv('CVE_DATA_PATH', "./cvelistV5/cves"),
-        help=f"CVE data directory (default: $CVE_DATA_PATH or ./cvelistV5/cves)"
+        default=os.path.expanduser('~/.vulnanalyzer/cvelistV5/cves'),
+        help=f"CVE data directory (default: $CVE_DATA_PATH or ~/.vulnanalyzer/cvelistV5/cves)"
     )
     parser.add_argument(
         "--kev-file",
         type=Path,
-        default=os.getenv('KEV_FILE_PATH', "./known_exploited_vulnerabilities.json"),
-        help=f"Known exploited vulnerabilities JSON file (default: $KEV_FILE_PATH or ./known_exploited_vulnerabilities.json)"
+        default=os.path.expanduser('~/.vulnanalyzer/known_exploited_vulnerabilities.json'),
+        help=f"Known exploited vulnerabilities JSON file (default: $KEV_FILE_PATH or ~/.vulnanalyzer/known_exploited_vulnerabilities.json)"
     )
     parser.add_argument(
         "--db-path",
-        default=os.getenv('DATABASE_PATH', "cve_database.db"),
-        help=f"Output database path (default: $DATABASE_PATH or cve_database.db)"
+        default=os.path.expanduser('~/.vulnanalyzer/databases/cve_database.db'),
+        help=f"Output database path (default: $DATABASE_PATH or ~/.vulnanalyzer/databases/cve_database.db)"
     )
     parser.add_argument(
         "--clear",

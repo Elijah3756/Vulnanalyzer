@@ -144,12 +144,12 @@ test-local:
 
 lint-local:
 	@echo "Running linting locally..."
-	flake8 vuln_analyzer/
-	mypy vuln_analyzer/
+	flake8 src/vulnanalyzer/
+	mypy src/vulnanalyzer/
 
 format-local:
 	@echo "Formatting code locally..."
-	black vuln_analyzer/
+	black src/vulnanalyzer/
 
 clean-local:
 	@echo "Cleaning local artifacts..."

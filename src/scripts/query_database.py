@@ -8,7 +8,9 @@ import argparse
 import json
 import os
 import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from typing import Dict, List, Any
 
 from tabulate import tabulate
@@ -197,8 +199,8 @@ def main():
     parser = argparse.ArgumentParser(description="Query CVE database")
     parser.add_argument(
         "--db-path",
-        default=os.getenv('DATABASE_PATH', "cve_database.db"),
-        help=f"Path to CVE database (default: $DATABASE_PATH or cve_database.db)"
+        default=os.path.expanduser('~/.vulnanalyzer/databases/cve_database.db'),
+        help=f"Path to CVE database (default: $DATABASE_PATH or ~/.vulnanalyzer/databases/cve_database.db)"
     )
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')

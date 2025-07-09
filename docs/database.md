@@ -5,9 +5,9 @@ The CVE Database System provides fast, indexed access to vulnerability data thro
 ## Overview
 
 The database system consists of:
-- **Database Builder** (`scripts/create_database.py`) - Creates and populates the database
-- **Database Interface** (`vuln_analyzer/database.py`) - Provides query capabilities
-- **Query Tool** (`scripts/query_database.py`) - Interactive database queries
+- **Database Builder** (`src/scripts/create_database.py`) - Creates and populates the database
+- **Database Interface** (`src/vulnanalyzer/database.py`) - Provides query capabilities
+- **Query Tool** (`src/scripts/query_database.py`) - Interactive database queries
 - **CLI Integration** - Vulnerability analyzer can use database for fast queries
 
 ## Database Schema
@@ -58,52 +58,52 @@ The database system consists of:
 make create-database
 
 # Create database with specific year
-python scripts/create_database.py --cve-dir ./cvelistV5/cves/2024 --db-path cve_2024.db
+python src/scripts/create_database.py --cve-dir ~/.vulnanalyzer/cvelistV5/cves/2024 --db-path ~/.vulnanalyzer/databases/cve_2024.db
 
 # Include known exploited vulnerabilities
-python scripts/create_database.py \
-  --cve-dir ./cvelistV5/cves \
-  --kev-file ./known_exploited_vulnerabilities.json \
-  --db-path cve_database.db
+python src/scripts/create_database.py \
+  --cve-dir ~/.vulnanalyzer/cvelistV5/cves \
+  --kev-file ~/.vulnanalyzer/known_exploited_vulnerabilities.json \
+  --db-path ~/.vulnanalyzer/databases/cve_database.db
 ```
 
 ### Using with Vulnerability Analyzer
 
 ```bash
 # Use database for faster queries
-vuln-analyzer CVE-2020-0001 --use-database cve_database.db
+vulnanalyzer cve CVE-2020-0001
 
 # Compare performance
-time vuln-analyzer CVE-2020-0001                              # File-based: ~15s
-time vuln-analyzer CVE-2020-0001 --use-database cve_database.db  # Database: ~0.1s
+time vulnanalyzer cve CVE-2020-0001                              # File-based: ~15s
+time vulnanalyzer cve CVE-2020-0001  # Database: ~0.1s
 ```
 
 ### Interactive Queries
 
 ```bash
 # Show database statistics
-python scripts/query_database.py stats
+python src/scripts/query_database.py stats
 
 # Search for specific CVE
-python scripts/query_database.py cve CVE-2021-44228
+python src/scripts/query_database.py cve CVE-2021-44228
 
 # Find vulnerabilities by vendor
-python scripts/query_database.py vendor "Microsoft" --limit 20
+python src/scripts/query_database.py vendor "Microsoft" --limit 20
 
 # Search by product
-python scripts/query_database.py product "Windows" --limit 15
+python src/scripts/query_database.py product "Windows" --limit 15
 
 # Known exploited vulnerabilities
-python scripts/query_database.py kev --limit 10
+python src/scripts/query_database.py kev --limit 10
 
 # Full-text search
-python scripts/query_database.py search "buffer overflow" --limit 25
+python src/scripts/query_database.py search "buffer overflow" --limit 25
 
 # Statistics by year
-python scripts/query_database.py years --years 5
+python src/scripts/query_database.py years --years 5
 
 # Top vendors by CVE count
-python scripts/query_database.py top-vendors --limit 15
+python src/scripts/query_database.py top-vendors --limit 15
 ```
 
 ## Performance Benefits
@@ -146,13 +146,13 @@ make create-database-help
 
 ```bash
 # Vacuum database to reclaim space
-sqlite3 cve_database.db "VACUUM;"
+sqlite3 ~/.vulnanalyzer/databases/cve_database.db "VACUUM;"
 
 # Check database integrity
-sqlite3 cve_database.db "PRAGMA integrity_check;"
+sqlite3 ~/.vulnanalyzer/databases/cve_database.db "PRAGMA integrity_check;"
 
 # View table sizes
-sqlite3 cve_database.db "
+sqlite3 ~/.vulnanalyzer/databases/cve_database.db "
 SELECT name, COUNT(*) as rows 
 FROM sqlite_master sm
 JOIN pragma_table_info(sm.name) pti
@@ -174,9 +174,9 @@ make create-database-clear
 ### Custom Queries
 
 ```python
-from vuln_analyzer.database import CVEDatabase
+from vulnanalyzer import CVEDatabase
 
-with CVEDatabase("cve_database.db") as db:
+with CVEDatabase("~/.vulnanalyzer/databases/cve_database.db") as db:
     # Get vulnerability trends
     trends = db.get_vulnerability_trends(years=5)
     
@@ -197,9 +197,9 @@ with CVEDatabase("cve_database.db") as db:
 
 ```python
 # Analyze using database (fast)
-from vuln_analyzer.database import CVEDatabase
+from vulnanalyzer import CVEDatabase
 
-with CVEDatabase("cve_database.db") as db:
+with CVEDatabase("~/.vulnanalyzer/databases/cve_database.db") as db:
     result = db.analyze_cve_database("CVE-2021-44228")
     print(f"Found {len(result.matched_cves)} related CVEs")
 ```
@@ -210,7 +210,7 @@ with CVEDatabase("cve_database.db") as db:
 
 ```bash
 # Default database path
-export CVE_DATABASE_PATH="/path/to/cve_database.db"
+export CVE_DATABASE_PATH="~/.vulnanalyzer/databases/cve_database.db"
 
 # Memory optimization for large datasets
 export SQLITE_CACHE_SIZE="-2000000"  # 2GB cache
@@ -238,10 +238,10 @@ PRAGMA optimize;
 df -h
 
 # Verify CVE directory structure
-ls -la cvelistV5/cves/
+ls -la ~/.vulnanalyzer/cvelistV5/cves/
 
 # Run with verbose logging
-python scripts/create_database.py --verbose
+python src/scripts/create_database.py --verbose
 ```
 
 #### Slow Queries
@@ -266,10 +266,10 @@ export SQLITE_CACHE_SIZE="-500000"  # 500MB instead of default
 ### Database Corruption
 ```bash
 # Check integrity
-sqlite3 cve_database.db "PRAGMA integrity_check;"
+sqlite3 ~/.vulnanalyzer/databases/cve_database.db "PRAGMA integrity_check;"
 
 # Backup and rebuild if needed
-cp cve_database.db cve_database_backup.db
+cp ~/.vulnanalyzer/databases/cve_database.db ~/.vulnanalyzer/databases/cve_database_backup.db
 make create-database-clear
 ```
 
@@ -284,10 +284,10 @@ make create-database-clear
 ### Migration Path
 ```bash
 # Backup before migration
-cp cve_database.db cve_database_v1.db
+cp ~/.vulnanalyzer/databases/cve_database.db ~/.vulnanalyzer/databases/cve_database_v1.db
 
 # Check schema version
-sqlite3 cve_database.db "PRAGMA user_version;"
+sqlite3 ~/.vulnanalyzer/databases/cve_database.db "PRAGMA user_version;"
 
 # Rebuild for major version changes
 make create-database-clear

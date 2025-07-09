@@ -87,24 +87,8 @@ check_requirements() {
 setup_environment() {
     print_step "Setting up environment configuration..."
     
-    if [ ! -f .env ]; then
-        if [ -f env.example ]; then
-            cp env.example .env
-            print_success "Created .env file from template"
-        else
-            print_warning "env.example not found, creating minimal .env"
-            cat > .env << EOF
-# Vulnerability Analyzer Environment Configuration
-CVE_DATA_PATH=/app/data/cvelistV5/cves
-DATABASE_PATH=/app/data/databases/cve_database.db
-KEV_FILE_PATH=/app/data/known_exploited_vulnerabilities.json
-DOWNLOAD_DIR=/app/data/downloads
-LOG_LEVEL=INFO
-EOF
-        fi
-    else
-        print_info ".env file already exists"
-    fi
+    # Environment configuration is handled by the container
+    print_info "Environment configuration is handled by container variables"
     
     # Create data directory structure
     mkdir -p data/{cvelistV5/cves,databases,downloads}
@@ -138,8 +122,8 @@ download_kev() {
 download_recent_cves() {
     print_step "Downloading recent CVE data (last 30 days)..."
     
-    # Check if user has API key
-    if [ -f .env ] && grep -q "NVD_API_KEY=" .env && [ ! -z "$(grep NVD_API_KEY= .env | cut -d= -f2)" ]; then
+    # Check if user has API key via environment variable
+    if [ ! -z "$NVD_API_KEY" ]; then
         print_info "Using API key for faster downloads"
         if docker-compose --profile download run --rm cve-downloader --recent-days 30; then
             print_success "Recent CVEs downloaded successfully!"
@@ -149,7 +133,7 @@ download_recent_cves() {
     else
         print_warning "No NVD API key found. Downloads will be slower."
         print_info "Get a free API key: https://nvd.nist.gov/developers/request-an-api-key"
-        print_info "Add it to .env file as: NVD_API_KEY=your_key_here"
+        print_info "Set it as environment variable: export NVD_API_KEY=your_key_here"
         
         if docker-compose --profile download run --rm cve-downloader --recent-days 7; then
             print_success "Recent CVEs downloaded successfully (limited to 7 days due to rate limits)!"
@@ -226,10 +210,10 @@ show_examples() {
     print_info "For more commands, run: make help"
     echo ""
     
-    if [ ! -f .env ] || ! grep -q "NVD_API_KEY=" .env || [ -z "$(grep NVD_API_KEY= .env | cut -d= -f2)" ]; then
+    if [ -z "$NVD_API_KEY" ]; then
         print_warning "Recommendation: Get an NVD API key for 50x faster downloads"
         echo "  1. Visit: https://nvd.nist.gov/developers/request-an-api-key"
-        echo "  2. Add to .env: NVD_API_KEY=your_key_here"
+        echo "  2. Set environment variable: export NVD_API_KEY=your_key_here"
         echo "  3. Run: make download-recent"
         echo ""
     fi

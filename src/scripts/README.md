@@ -72,7 +72,7 @@ python download_cves.py --api-key $NVD_API_KEY --all
 python download_cves.py --output-dir ./my_cves --year 2024
 
 # Download to match your existing structure
-python download_cves.py --output-dir ./cvelistV5/cves --year 2024
+python download_cves.py --output-dir ~/.vulnanalyzer/cvelistV5/cves --year 2024
 ```
 
 ## Rate Limits
@@ -143,7 +143,7 @@ python download_cves.py --start-date 2024-01-01 --end-date 2024-01-31
 ```bash
 # Download last 5 years
 for year in {2020..2024}; do
-  python download_cves.py --year $year --output-dir ./cvelistV5/cves
+  python download_cves.py --year $year --output-dir ~/.vulnanalyzer/cvelistV5/cves
   sleep 60  # Wait between years to be respectful
 done
 ```
@@ -165,7 +165,7 @@ The `--all` option downloads the complete CVE database from NVD. This is useful 
 
 ```bash
 # Download all CVEs (with API key recommended)
-python download_cves.py --api-key YOUR_API_KEY --all --output-dir ./cvelistV5/cves
+python download_cves.py --api-key YOUR_API_KEY --all --output-dir ~/.vulnanalyzer/cvelistV5/cves
 
 # Monitor progress - the script shows download progress
 # Example output:
@@ -182,10 +182,10 @@ After downloading CVEs, you can use them with your vulnerability analyzer:
 
 ```bash
 # Download CVEs to match your existing structure
-python download_cves.py --output-dir ./cvelistV5/cves --year 2024
+python download_cves.py --output-dir ~/.vulnanalyzer/cvelistV5/cves --year 2024
 
 # Test with your analyzer
-vuln-analyzer CVE-2024-0001 --cve-data-path ./cvelistV5/cves
+vulnanalyzer cve CVE-2024-0001
 ```
 
 ## Error Handling

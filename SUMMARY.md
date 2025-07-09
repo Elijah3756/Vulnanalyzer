@@ -34,13 +34,13 @@ Successfully built a comprehensive **containerized CLI tool** for vulnerability 
 
 ## Implementation Components
 
-### Core Package (`vuln_analyzer/`)
+### Core Package (`vulnanalyzer/`)
 - **`cli.py`**: Click-based CLI with database support
 - **`data_processor.py`**: Core analysis logic with caching and sampling
 - **`models.py`**: Pydantic data models for CVE Record Format 5.x
 - **`database.py`**: SQLite interface for fast queries
 
-### Database System (`scripts/`)
+### Database System (`src/scripts/`)
 - **`create_database.py`**: Database builder with batch processing
 - **`query_database.py`**: Interactive query tool with analytics
 - **`download_cves.py`**: NVD API integration for fresh data
@@ -102,9 +102,9 @@ make create-database
 make update-cves
 
 # Interactive queries
-python scripts/query_database.py stats
-python scripts/query_database.py vendor "Microsoft"
-python scripts/query_database.py search "buffer overflow"
+python src/scripts/query_database.py stats
+python src/scripts/query_database.py vendor "Microsoft"
+python src/scripts/query_database.py search "buffer overflow"
 ```
 
 ## Usage Examples
@@ -115,7 +115,7 @@ python scripts/query_database.py search "buffer overflow"
 vuln-analyzer CVE-2020-0001
 
 # Lightning-fast database analysis
-vuln-analyzer CVE-2020-0001 --use-database cve_database.db
+vulnanalyzer cve CVE-2020-0001
 
 # Package analysis
 vuln-analyzer "pkg:npm/lodash@4.17.20"
@@ -127,17 +127,17 @@ vuln-analyzer "cpe:2.3:a:apache:http_server:2.4.41"
 ### Database Queries
 ```bash
 # Known exploited vulnerabilities
-python scripts/query_database.py kev --limit 20
+python src/scripts/query_database.py kev --limit 20
 
 # Vendor-specific search
-python scripts/query_database.py vendor "Microsoft" --limit 50
+python src/scripts/query_database.py vendor "Microsoft" --limit 50
 
 # Full-text search
-python scripts/query_database.py search "remote code execution"
+python src/scripts/query_database.py search "remote code execution"
 
 # Statistics and trends
-python scripts/query_database.py years --years 10
-python scripts/query_database.py top-vendors
+python src/scripts/query_database.py years --years 10
+python src/scripts/query_database.py top-vendors
 ```
 
 ## 🧪 Testing & Validation
